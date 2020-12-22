@@ -1,4 +1,4 @@
-Grammaire
+Grammar
 
     0 $accept: program $end
 
@@ -13,7 +13,7 @@ Grammaire
     6    | TYPE_BOOLEAN
 
 
-Terminaux, suivis des règles où ils apparaissent
+Terminals, with rules where they appear
 
 $end (0) 0
 error (256)
@@ -24,103 +24,103 @@ TYPE_INTEGER (261) 5
 TYPE_BOOLEAN (262) 6
 
 
-Non-terminaux, suivis des règles où ils apparaissent
+Nonterminals, with rules where they appear
 
 $accept (8)
-    à gauche: 0
+    on left: 0
 program (9)
-    à gauche: 1, à droite: 0
+    on left: 1, on right: 0
 prog_instr (10)
-    à gauche: 2 3, à droite: 1
+    on left: 2 3, on right: 1
 expr (11)
-    à gauche: 4, à droite: 3
+    on left: 4, on right: 3
 cte (12)
-    à gauche: 5 6, à droite: 4
+    on left: 5 6, on right: 4
 
 
-État 0
+state 0
 
     0 $accept: . program $end
 
-    TYPE_PROGRAM  décalage et aller à l'état 1
+    TYPE_PROGRAM  shift, and go to state 1
 
-    program  aller à l'état 2
+    program  go to state 2
 
 
-État 1
+state 1
 
     1 program: TYPE_PROGRAM . TYPE_IDENT prog_instr
 
-    TYPE_IDENT  décalage et aller à l'état 3
+    TYPE_IDENT  shift, and go to state 3
 
 
-État 2
+state 2
 
     0 $accept: program . $end
 
-    $end  décalage et aller à l'état 4
+    $end  shift, and go to state 4
 
 
-État 3
+state 3
 
     1 program: TYPE_PROGRAM TYPE_IDENT . prog_instr
 
-    TYPE_RETURN  décalage et aller à l'état 5
+    TYPE_RETURN  shift, and go to state 5
 
-    prog_instr  aller à l'état 6
+    prog_instr  go to state 6
 
 
-État 4
+state 4
 
     0 $accept: program $end .
 
-    $défaut  accepter
+    $default  accept
 
 
-État 5
+state 5
 
     2 prog_instr: TYPE_RETURN .
     3           | TYPE_RETURN . expr
 
-    TYPE_INTEGER  décalage et aller à l'état 7
-    TYPE_BOOLEAN  décalage et aller à l'état 8
+    TYPE_INTEGER  shift, and go to state 7
+    TYPE_BOOLEAN  shift, and go to state 8
 
-    $défaut  réduction par utilisation de la règle 2 (prog_instr)
+    $default  reduce using rule 2 (prog_instr)
 
-    expr  aller à l'état 9
-    cte   aller à l'état 10
+    expr  go to state 9
+    cte   go to state 10
 
 
-État 6
+state 6
 
     1 program: TYPE_PROGRAM TYPE_IDENT prog_instr .
 
-    $défaut  réduction par utilisation de la règle 1 (program)
+    $default  reduce using rule 1 (program)
 
 
-État 7
+state 7
 
     5 cte: TYPE_INTEGER .
 
-    $défaut  réduction par utilisation de la règle 5 (cte)
+    $default  reduce using rule 5 (cte)
 
 
-État 8
+state 8
 
     6 cte: TYPE_BOOLEAN .
 
-    $défaut  réduction par utilisation de la règle 6 (cte)
+    $default  reduce using rule 6 (cte)
 
 
-État 9
+state 9
 
     3 prog_instr: TYPE_RETURN expr .
 
-    $défaut  réduction par utilisation de la règle 3 (prog_instr)
+    $default  reduce using rule 3 (prog_instr)
 
 
-État 10
+state 10
 
     4 expr: cte .
 
-    $défaut  réduction par utilisation de la règle 4 (expr)
+    $default  reduce using rule 4 (expr)

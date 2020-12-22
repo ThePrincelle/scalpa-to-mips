@@ -5,6 +5,8 @@
     #include "stdbool.h"
     #include "abstract_syntax_tree.h"
 
+    #include "y.tab.h"
+
     extern int yylex();
     extern FILE *yyin;
     extern FILE *yyout;
@@ -21,23 +23,44 @@
 }
 
 %start program
-%token TYPE_PROGRAM TYPE_IDENT TYPE_RETURN TYPE_INTEGER TYPE_BOOLEAN
+%token T_PROGRAM T_IDENT T_RETURN T_INTEGER T_BOOLEAN T_BEGIN T_END SEMICOLON
 
-%type <string_val> TYPE_IDENT TYPE_RETURN TYPE_PROGRAM prog_instr expr cte 
-%type <bool_val> TYPE_BOOLEAN
-%type <int_val> TYPE_INTEGER
+%type <string_val> T_IDENT T_RETURN T_PROGRAM T_BEGIN T_END prog_instr expr cte sequence SEMICOLON
+%type <bool_val> T_BOOLEAN 
+%type <int_val> T_INTEGER
 
 %%
 
-program : TYPE_PROGRAM TYPE_IDENT prog_instr {fprintf(yyout,"\t.text\n#\t%s\nmain:\n\t%s",$2,$3);};
+program : T_PROGRAM T_IDENT prog_instr {fprintf(yyout,"\t.text\n#\t%s\nmain:\n\t%s",$2,$3);};
 
-prog_instr : TYPE_RETURN           {$$ = "syscall";}
-           | TYPE_RETURN expr      {char buffer [100]; snprintf(buffer,100,"%s\n\tsyscall",$2); $$ = buffer;};
+prog_instr : T_RETURN               {$$ = "";}
+           | T_RETURN expr          {char buffer [100];
+                                     //if ($2.type == int_val || $2.type == bool_val)
+                                     //{
+                                      snprintf(buffer,100,"%s\n\tli $v0 1\n\tsyscall",$2);
+                                     //}
+                                     $$ = buffer;
+                                    }
+           | T_BEGIN sequence T_END {$$ = $2;}
+           | T_BEGIN T_END          {$$ = "";};
 
-expr : cte                         {$$ = $1;};
+sequence : prog_instr SEMICOLON sequence {
+                                    char buffer [100];
+                                    snprintf(buffer,100,"%s\n\t%s",$1,$3);
+                                    $$ = buffer;
+                                   }
+         | prog_instr SEMICOLON          {
+                                    char buffer [100];
+                                    snprintf(buffer,100,"%s",$1);
+                                    $$ = buffer;
+                                   }
+         | prog_instr              { $$ = $1 ;};
 
-cte : TYPE_INTEGER                 { char buffer [100]; snprintf(buffer,100,"li $a0 %d\n\tli $v0 1", $1); $$ = buffer;}
-    | TYPE_BOOLEAN                 { char buffer [100]; snprintf(buffer,100,"li $a0 %d\n\tli $v0 1" , $1); $$ = buffer;};
+expr : cte                      {//$$.type = $1.type; 
+                                 $$ = $1;};
+
+cte : T_INTEGER                 { char buffer [100]; snprintf(buffer,100,"li $a0 %d", $1); $$ = buffer;}
+    | T_BOOLEAN                 { char buffer [100]; snprintf(buffer,100,"li $a0 %d" , $1); $$ = buffer;};
 
 %%
 

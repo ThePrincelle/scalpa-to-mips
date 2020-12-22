@@ -4,7 +4,7 @@
 #include "utils.h"
 #include "stdbool.h"
 
-typedef enum nodetype_def {
+typedef enum nodeT_def {
   PROGRAM,
   INSTR,
   RETURN,

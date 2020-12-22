@@ -11,7 +11,7 @@ cd ${DIR}
 
 # Build the compiler
 echo "Building compiler..."
-make testing
+make
 
 # Run tests
 echo ""

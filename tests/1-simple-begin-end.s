@@ -10,4 +10,4 @@ main:
 	syscall
 	li $a0 10
 	li $v0 1
-	syscalltoto
+	syscall

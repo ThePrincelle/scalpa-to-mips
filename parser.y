@@ -5,12 +5,11 @@
     #include "stdbool.h"
     #include "abstract_syntax_tree.h"
 
-    #include "y.tab.h"
-
     extern int yylex();
     extern FILE *yyin;
     extern FILE *yyout;
-    
+    enum type {int_val, bool_val, string_val};
+   
     void yyerror(char*);
     //void lex_free();
 %}
@@ -20,25 +19,30 @@
   int bool_val;
   int int_val;
   char* string_val;
+  struct 
+  {
+    int val;
+    int type;
+  } var;
 }
 
 %start program
 %token T_PROGRAM T_IDENT T_RETURN T_INTEGER T_BOOLEAN T_BEGIN T_END SEMICOLON
 
-%type <string_val> T_IDENT T_RETURN T_PROGRAM T_BEGIN T_END prog_instr expr cte sequence SEMICOLON
+%type <string_val> T_IDENT T_RETURN T_PROGRAM T_BEGIN T_END SEMICOLON prog_instr sequence 
 %type <bool_val> T_BOOLEAN 
 %type <int_val> T_INTEGER
-
+%type <var> cte expr
 %%
 
 program : T_PROGRAM T_IDENT prog_instr {fprintf(yyout,"\t.text\n#\t%s\nmain:\n\t%s",$2,$3);};
 
 prog_instr : T_RETURN               {$$ = "";}
            | T_RETURN expr          {char buffer [100];
-                                     //if ($2.type == int_val || $2.type == bool_val)
-                                     //{
-                                      snprintf(buffer,100,"%s\n\tli $v0 1\n\tsyscall",$2);
-                                     //}
+                                     if ($2.type == int_val || $2.type == bool_val)
+                                     {
+                                      snprintf(buffer,100,"li $a0 %d\n\tli $v0 1\n\tsyscall",$2.val);
+                                     }
                                      $$ = buffer;
                                     }
            | T_BEGIN sequence T_END {$$ = $2;}
@@ -56,11 +60,10 @@ sequence : prog_instr SEMICOLON sequence {
                                    }
          | prog_instr              { $$ = $1 ;};
 
-expr : cte                      {//$$.type = $1.type; 
-                                 $$ = $1;};
+expr : cte                      {$$ = $1;};
 
-cte : T_INTEGER                 { char buffer [100]; snprintf(buffer,100,"li $a0 %d", $1); $$ = buffer;}
-    | T_BOOLEAN                 { char buffer [100]; snprintf(buffer,100,"li $a0 %d" , $1); $$ = buffer;};
+cte : T_INTEGER                 {$$.val = $1; $$.type = int_val;}
+    | T_BOOLEAN                 {$$.val = $1; $$.type = bool_val;};
 
 %%
 
@@ -88,8 +91,11 @@ int main(int argc, char* argv[])
   char* out_file = strdup(in_file);
   strcpy(&out_file[in_file_length-4],&out_file[in_file_length]);
   out_file= strcat(out_file,".s");
+
+  // Erase content of file
+  fclose(fopen(out_file, "w+"));
   
-  yyout = fopen(out_file, "w+");
+  yyout = fopen(out_file, "w");
   yyparse();
 
   fclose(yyin);

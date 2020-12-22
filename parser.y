@@ -29,7 +29,7 @@
 
 %%
 
-program : TYPE_PROGRAM TYPE_IDENT prog_instr {printf(".text\n# %s\nmain\n\t%s",$2,$3);};
+program : TYPE_PROGRAM TYPE_IDENT prog_instr {printf(" .text\n# %s\nmain\n\t%s",$2,$3);};
 
 prog_instr : TYPE_RETURN           {$$ = "syscall";}
            | TYPE_RETURN expr      {char buffer [100]; snprintf(buffer,100,"%s\n\tsyncall",$2); $$ = buffer;};

@@ -1223,7 +1223,7 @@ yyreduce:
     {
         case 2:
 #line 32 "parser.y" /* yacc.c:1646  */
-    {printf(".text\n# %s\nmain\n\t%s",(yyvsp[-1].string_val),(yyvsp[0].string_val));}
+    {printf(" .text\n# %s\nmain\n\t%s",(yyvsp[-1].string_val),(yyvsp[0].string_val));}
 #line 1228 "y.tab.c" /* yacc.c:1646  */
     break;
 

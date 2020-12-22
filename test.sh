@@ -17,7 +17,8 @@ make
 
 # Run tests
 echo ""
-echo "Running tests..."
+echo "🔄  Running tests..."
+echo "--------------------"
 echo ""
 for f in "$DIR"/tests/*"${SCALPA_EXT}"
 do
@@ -41,7 +42,7 @@ do
         echo "  🔄  Running compiled MIPS code: ${testfile_mips}"
         echo -e "\033[32m"
 
-        if java -jar Mars4_5.jar dec v1 "${testfile_mips}" ; then
+        if java -jar Mars4_5.jar dec v1 "${testfile_mips}" ae1 se1 ; then
             echo -e "\033[0m"
             echo "  ✅  MIPS code runned successfully for: ${testfile_mips}"
         else
@@ -56,9 +57,10 @@ do
     fi
 
     echo ""
-    echo "  ✅  Tests passed for: ${testfile}"
+    echo "✅  Tests passed for: ${testfile}"
     echo ""
 done
 
 # All tests have passed.
+echo "--------------------"
 echo "✅  All tests passed successfully."

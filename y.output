@@ -1,0 +1,126 @@
+Grammaire
+
+    0 $accept: program $end
+
+    1 program: TYPE_PROGRAM TYPE_IDENT prog_instr
+
+    2 prog_instr: TYPE_RETURN
+    3           | TYPE_RETURN expr
+
+    4 expr: cte
+
+    5 cte: TYPE_INTEGER
+    6    | TYPE_BOOLEAN
+
+
+Terminaux, suivis des règles où ils apparaissent
+
+$end (0) 0
+error (256)
+TYPE_PROGRAM (258) 1
+TYPE_IDENT (259) 1
+TYPE_RETURN (260) 2 3
+TYPE_INTEGER (261) 5
+TYPE_BOOLEAN (262) 6
+
+
+Non-terminaux, suivis des règles où ils apparaissent
+
+$accept (8)
+    à gauche: 0
+program (9)
+    à gauche: 1, à droite: 0
+prog_instr (10)
+    à gauche: 2 3, à droite: 1
+expr (11)
+    à gauche: 4, à droite: 3
+cte (12)
+    à gauche: 5 6, à droite: 4
+
+
+État 0
+
+    0 $accept: . program $end
+
+    TYPE_PROGRAM  décalage et aller à l'état 1
+
+    program  aller à l'état 2
+
+
+État 1
+
+    1 program: TYPE_PROGRAM . TYPE_IDENT prog_instr
+
+    TYPE_IDENT  décalage et aller à l'état 3
+
+
+État 2
+
+    0 $accept: program . $end
+
+    $end  décalage et aller à l'état 4
+
+
+État 3
+
+    1 program: TYPE_PROGRAM TYPE_IDENT . prog_instr
+
+    TYPE_RETURN  décalage et aller à l'état 5
+
+    prog_instr  aller à l'état 6
+
+
+État 4
+
+    0 $accept: program $end .
+
+    $défaut  accepter
+
+
+État 5
+
+    2 prog_instr: TYPE_RETURN .
+    3           | TYPE_RETURN . expr
+
+    TYPE_INTEGER  décalage et aller à l'état 7
+    TYPE_BOOLEAN  décalage et aller à l'état 8
+
+    $défaut  réduction par utilisation de la règle 2 (prog_instr)
+
+    expr  aller à l'état 9
+    cte   aller à l'état 10
+
+
+État 6
+
+    1 program: TYPE_PROGRAM TYPE_IDENT prog_instr .
+
+    $défaut  réduction par utilisation de la règle 1 (program)
+
+
+État 7
+
+    5 cte: TYPE_INTEGER .
+
+    $défaut  réduction par utilisation de la règle 5 (cte)
+
+
+État 8
+
+    6 cte: TYPE_BOOLEAN .
+
+    $défaut  réduction par utilisation de la règle 6 (cte)
+
+
+État 9
+
+    3 prog_instr: TYPE_RETURN expr .
+
+    $défaut  réduction par utilisation de la règle 3 (prog_instr)
+
+
+État 10
+
+    4 expr: cte .
+
+    $défaut  réduction par utilisation de la règle 4 (expr)

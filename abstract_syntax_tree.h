@@ -17,7 +17,7 @@ typedef union nodedata_def {
   /* data */
   Vector child_nodes;
   int int_val;
-  bool bool_val;
+  int bool_val;
   char* string_val;
 }NodeValue;
 

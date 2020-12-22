@@ -12,7 +12,10 @@ SCALPA_EXT=".pas"
 cd ${DIR}
 
 # Build the compiler
-echo "Building compiler..."
+echo ""
+echo "🛠  Building compiler..."
+echo "--------------------"
+echo ""
 make
 
 # Run tests
@@ -25,10 +28,11 @@ do
     # Get Relative path
     testfile=".${f#"$DIR"}"
 
+    # Run tests on file
     echo "- Running tests for: ${testfile}..."
     echo ""
 
-    # Run test
+    # Run compiler on file
     echo "  🔄  Running Scalpa to MIPS compiler on: ${testfile_mips}"
     echo ""
 
@@ -38,7 +42,7 @@ do
 
         testfile_mips="${testfile%"$SCALPA_EXT"}.s"
 
-
+        # Run MIPS compiled code
         echo "  🔄  Running compiled MIPS code: ${testfile_mips}"
         echo -e "\033[32m"
 

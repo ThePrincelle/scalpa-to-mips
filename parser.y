@@ -27,9 +27,9 @@
 }
 
 %start program
-%token T_PROGRAM T_IDENT T_RETURN T_INTEGER T_BOOLEAN T_BEGIN T_END SEMICOLON
+%token T_PROGRAM T_IDENT T_RETURN T_INTEGER T_BOOLEAN T_BEGIN T_END SEMICOLON T_MINUS T_NOT
 
-%type <string_val> T_IDENT T_RETURN T_PROGRAM T_BEGIN T_END SEMICOLON prog_instr sequence 
+%type <string_val> T_IDENT T_RETURN T_PROGRAM T_BEGIN T_END SEMICOLON T_MINUS T_NOT prog_instr sequence 
 %type <bool_val> T_BOOLEAN 
 %type <int_val> T_INTEGER
 %type <var> cte expr
@@ -64,6 +64,9 @@ expr : cte                      {$$ = $1;};
 
 cte : T_INTEGER                 {$$.val = $1; $$.type = int_val;}
     | T_BOOLEAN                 {$$.val = $1; $$.type = bool_val;};
+  
+opu : T_NOT                     {}
+    | T_MINUS                   {};
 
 %%
 

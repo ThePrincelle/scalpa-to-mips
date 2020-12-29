@@ -13,7 +13,8 @@
 %%
 
 ;                               { return SEMICOLON; }
-
+-                               { return T_MINUS; }
+not                             { return T_NOT; }
 program                         { return T_PROGRAM; }
 return                          { return T_RETURN; }
 begin                           { return T_BEGIN; }

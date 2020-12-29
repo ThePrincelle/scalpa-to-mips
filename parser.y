@@ -27,9 +27,9 @@
 }
 
 %start program
-%token T_PROGRAM T_IDENT T_RETURN T_INTEGER T_BOOLEAN T_BEGIN T_END SEMICOLON
+%token T_PROGRAM T_IDENT T_RETURN T_INTEGER T_BOOLEAN T_BEGIN T_END T_STRING SEMICOLON
 
-%type <string_val> T_IDENT T_RETURN T_PROGRAM T_BEGIN T_END SEMICOLON prog_instr sequence 
+%type <string_val> T_IDENT T_RETURN T_PROGRAM T_BEGIN T_END T_STRING SEMICOLON prog_instr sequence 
 %type <bool_val> T_BOOLEAN 
 %type <int_val> T_INTEGER
 %type <var> cte expr
@@ -42,6 +42,10 @@ prog_instr : T_RETURN               {$$ = "";}
                                      if ($2.type == int_val || $2.type == bool_val)
                                      {
                                       snprintf(buffer,100,"li $a0 %d\n\tli $v0 1\n\tsyscall",$2.val);
+                                     }
+                                     else
+                                     {
+                                      snprintf(buffer,100,"li $a0 %d\n\tli $v0 4\n\tsyscall",$2.val);
                                      }
                                      $$ = buffer;
                                     }
@@ -64,6 +68,7 @@ expr : cte                      {$$ = $1;};
 
 cte : T_INTEGER                 {$$.val = $1; $$.type = int_val;}
     | T_BOOLEAN                 {$$.val = $1; $$.type = bool_val;};
+    | T_STRING                  {$$.val = $1; $$.type = string_val;};
 
 %%
 

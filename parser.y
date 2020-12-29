@@ -31,7 +31,7 @@
 
 %type <string_val> T_IDENT T_RETURN T_PROGRAM T_BEGIN T_END T_STRING T_MINUS T_NOT SEMICOLON prog_instr sequence 
 %type <bool_val> T_BOOLEAN 
-%type <int_val> T_INTEGER
+%type <int_val> T_INTEGER opu
 %type <var> cte expr
 %%
 
@@ -64,14 +64,41 @@ sequence : prog_instr SEMICOLON sequence {
                                    }
          | prog_instr              { $$ = $1 ;};
 
-expr : cte                      {$$ = $1;};
+expr : cte                      {$$ = $1;}
+     | opu expr                 {
+                                    if($1 == 0)
+                                    {
+                                      if($2.type == int_val )
+                                      {
+                                        $$.type = int_val;
+                                        $$.val = -1*$$.val;
+                                      }
+                                      else
+                                      {
+                                        yyerror("Syntax error");
+                                      }
+                                      
+                                    }
+                                    else if ($1 == 1)
+                                    {
+                                      if($2.type == bool_val )
+                                      {
+                                        $$.type = bool_val;
+                                        $$.val = !$$.val;
+                                      }
+                                      else
+                                      {
+                                        yyerror("Syntax error");
+                                      }
+                                    }
+                                };
 
 cte : T_INTEGER                 {$$.val = $1; $$.type = int_val;}
     | T_BOOLEAN                 {$$.val = $1; $$.type = bool_val;};
     | T_STRING                  {$$.val = $1; $$.type = string_val;};
   
-opu : T_NOT                     {}
-    | T_MINUS                   {};
+opu : T_NOT                     {$$ = 0;}
+    | T_MINUS                   {$$ = 1;};
 
 %%
 

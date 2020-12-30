@@ -1,2 +1,2 @@
 program mainOnly
-  return false
+  write not false

@@ -19,6 +19,7 @@
 not                             { return T_NOT; }
 program                         { return T_PROGRAM; }
 return                          { return T_RETURN; }
+write                           { return T_WRITE; }
 begin                           { return T_BEGIN; }
 end                             { return T_END; }
 true                            { yylval.string_val = "1"; return T_BOOLEAN; }

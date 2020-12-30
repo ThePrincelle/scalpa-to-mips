@@ -1,0 +1,5 @@
+
+	.text
+#	mainOnly
+main:
+	

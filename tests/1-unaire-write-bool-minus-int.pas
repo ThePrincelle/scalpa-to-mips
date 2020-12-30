@@ -1,2 +1,2 @@
 program mainOnly
-  return true
+  write -10

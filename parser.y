@@ -81,9 +81,9 @@
 }
 
 %start program
-%token T_PROGRAM T_IDENT T_RETURN T_INTEGER T_BOOLEAN T_BEGIN T_END T_STRING SEMICOLON T_MINUS T_NOT
+%token T_PROGRAM T_IDENT T_RETURN T_WRITE T_INTEGER T_BOOLEAN T_BEGIN T_END T_STRING SEMICOLON T_MINUS T_NOT
 
-%type <string_val> T_IDENT T_RETURN T_PROGRAM T_BEGIN T_END T_STRING T_MINUS T_NOT T_INTEGER T_BOOLEAN SEMICOLON prog_instr sequence 
+%type <string_val> T_IDENT T_RETURN T_WRITE T_PROGRAM T_BEGIN T_END T_STRING T_MINUS T_NOT T_INTEGER T_BOOLEAN SEMICOLON prog_instr sequence 
 //%type <bool_val>  
 %type <int_val> opu
 %type <var> cte expr
@@ -92,7 +92,10 @@
 program : T_PROGRAM T_IDENT prog_instr {fprintf(yyout,"\t.text\n#\t%s\nmain:\n\t%s",$2,$3);};
 
 prog_instr : T_RETURN               {$$ = "";}
-           | T_RETURN expr          {char buffer [100];
+           | T_RETURN expr          {$$= "";}
+           | T_BEGIN {push(contextes, 0);} sequence T_END {$$ = $1; pop(contextes);}
+           | T_BEGIN T_END          {$$ = "";}
+           | T_WRITE expr           {char buffer [100];
                                      if ($2.type == int_val || $2.type == bool_val)
                                      {
                                       snprintf(buffer,100,"%sli $v0 1\n\tsyscall",$2.val);
@@ -101,10 +104,7 @@ prog_instr : T_RETURN               {$$ = "";}
                                      {
                                       snprintf(buffer,100,"%sli $v0 4\n\tsyscall",$2.val);
                                      }
-                                     $$ = buffer;
-                                    }
-           | T_BEGIN {push(contextes, 0);} sequence T_END {$$ = $1; pop(contextes);}
-           | T_BEGIN T_END          {$$ = "";};
+                                     $$ = buffer;};
 
 sequence : prog_instr SEMICOLON sequence {
                                             char buffer [100];

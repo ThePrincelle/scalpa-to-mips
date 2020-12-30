@@ -1,6 +1,7 @@
+
 	.text
-# mainOnly
+#	mainOnly
 main:
-  li $a0 10
-	li $v0 17
-  syscall
+	li $a0 10
+	li $v0 1
+	syscall

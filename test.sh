@@ -36,7 +36,7 @@ do
     echo "  🔄  Running Scalpa to MIPS compiler on: ${testfile_mips}"
     echo ""
 
-    if ./a.out "${testfile}" ; then
+    if ./scalpa "${testfile}" ; then
         echo "  ✅  Compilation succeeded for: ${testfile}"
         echo ""
 

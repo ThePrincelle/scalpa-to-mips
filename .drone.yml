@@ -2,6 +2,9 @@ kind: pipeline
 type: docker
 name: default
 
+workspace:
+  path: /app
+
 steps:
 - name: test
   image: theprincemax/compil-tester:latest
@@ -9,7 +12,3 @@ steps:
     TEST_FOLDER: "tests"
   commands:
     - "cd /app && ./test.sh"
-  volumes:
-  - name: workspace
-    path: /app
-

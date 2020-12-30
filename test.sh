@@ -9,7 +9,7 @@ DIR=$(dirname -- "$FILE" )
 SCALPA_EXT=".pas"
 
 # Go to root of project
-cd ${DIR}
+cd "${DIR}"
 
 # Build the compiler
 echo ""

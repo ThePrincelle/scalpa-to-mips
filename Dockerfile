@@ -14,8 +14,5 @@ RUN apt-get install -y --no-install-recommends build-essential bison flex defaul
 # Clean image
 RUN rm -rf /var/lib/apt/lists/*
 
-# Copy project files
-COPY . /app
-
 # Setup working directory
 WORKDIR /app

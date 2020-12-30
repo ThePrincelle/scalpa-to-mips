@@ -136,7 +136,7 @@ expr : cte                      {char buffer [100];
                                   {
                                     if($2.type == int_val )
                                     {
-                                      snprintf(buffer,100,"%smul $t6 $a0 -1\n\tla $a0, ($t6)\n\t",$2.val);
+                                      snprintf(buffer,100,"%smul $t6 $a0 -1\n\tmove $a0 $t6\n\t",$2.val);
                                       $$.type = int_val;                                     
                                     }
                                     else
@@ -149,7 +149,7 @@ expr : cte                      {char buffer [100];
                                   {
                                     if($2.type == bool_val )
                                     {
-                                      snprintf(buffer,100,"%sseq $t6 $a0 $zero\n\tla $a0, ($t6)\n\t",$2.val);    
+                                      snprintf(buffer,100,"%sseq $t6 $a0 $zero\n\tmove $a0 $t6\n\t",$2.val);    
                                       $$.type = bool_val;
                                     }
                                     else

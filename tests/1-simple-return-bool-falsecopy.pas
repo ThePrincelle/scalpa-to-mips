@@ -1,2 +1,0 @@
-program mainOnly
-  return true

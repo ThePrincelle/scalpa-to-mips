@@ -16,7 +16,11 @@ echo ""
 echo "🛠  Building compiler..."
 echo "--------------------"
 echo ""
-make
+if make ; then
+    echo "✅  Compiler successfully built !"
+else
+    echo "🔥  Compiler build failed."
+fi
 
 # Run tests
 echo ""

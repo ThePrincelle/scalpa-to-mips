@@ -11,6 +11,7 @@
   extern FILE *yyin;
   extern FILE *yyout;
   enum type {int_val, bool_val, string_val};
+  enum op_unaire {opu_minus, opu_not};
 
   typedef struct quadrup { /** ligne de code mips et le code **/
     char* instruction;
@@ -120,22 +121,23 @@ sequence : prog_instr SEMICOLON sequence {
 expr : cte                      {char buffer [100];
                                   if ($1.type == int_val || $1.type == bool_val)
                                   {
-                                    snprintf(buffer,100,"li $a0 %s\n\t",$1.val);
+                                    snprintf(buffer,100,"li $a0 %d\n\t",atoi($1.val));
                                   }
                                   else
                                   {
-                                    snprintf(buffer,100,"li $a0 %s\n\t",$1.val);
+                                    snprintf(buffer,100,"li $a0 %d\n\t",atoi($1.val));
                                   }
                                   $$.val = buffer;
                                   $$.type = $1.type;
                                 }
       | opu expr                {
-                                  if($1 == 0)
+                                  char buffer [100];
+                                  if($1 == opu_minus)
                                   {
                                     if($2.type == int_val )
                                     {
-                                      $$.type = int_val;
-                                      $$.val = -1*$$.val;
+                                      snprintf(buffer,100,"%smul $t6 $a0 -1\n\tla $a0, ($t6)\n\t",$2.val);
+                                      $$.type = int_val;                                     
                                     }
                                     else
                                     {
@@ -143,32 +145,34 @@ expr : cte                      {char buffer [100];
                                     }
                                     
                                   }
-                                  else if ($1 == 1)
+                                  else if ($1 == opu_not)
                                   {
                                     if($2.type == bool_val )
                                     {
+                                      snprintf(buffer,100,"%sseq $t6 $a0 $zero\n\tla $a0, ($t6)\n\t",$2.val);    
                                       $$.type = bool_val;
-                                      $$.val = !$$.val;
                                     }
                                     else
                                     {
                                       yyerror("Syntax error");
                                     }
                                   }
-                                }
+                                  $$.val = buffer; 
+                                };
                                 
 
 cte : T_INTEGER                 {$$.val = $1; $$.type = int_val;}
-    | T_BOOLEAN                 {$$.val = $1; $$.type = bool_val;};
+    | T_BOOLEAN                 {$$.val = $1; $$.type = bool_val;}
     | T_STRING                  {$$.val = $1; $$.type = string_val;};
   
-opu : T_NOT                     {$$ = 0;}
-    | T_MINUS                   {$$ = 1;};
+opu : T_NOT                     {$$ = opu_not;}
+    | T_MINUS                   {$$ = opu_minus;};
 
 %%
 
 void yyerror (char *s) {
-    fprintf(stderr, "[Yacc] error: %s\n", s);
+  fprintf(stderr, "[Yacc] error: %s\n", s);
+  exit(1);
 }
 
 void init ()

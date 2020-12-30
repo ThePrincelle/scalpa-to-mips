@@ -3,21 +3,13 @@ type: docker
 name: default
 
 steps:
-- name: build  
-  image: plugins/docker
-  settings:
-    username:
-      from_secret: dockerhub_username
-    password:
-      from_secret: dockerhub_password
-    repo: theprincemax/compil-tester
-    dockerfile: ./Dockerfile
-    tags:
-      - latest
-
 - name: test
   image: theprincemax/compil-tester:latest
   environment:
     TEST_FOLDER: "tests"
   commands:
     - "cd /app && ./test.sh"
+  volumes:
+  - name: workspace
+    path: /app
+

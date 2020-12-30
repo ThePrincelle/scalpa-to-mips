@@ -84,8 +84,8 @@
 
 %type <string_val> T_IDENT T_RETURN T_PROGRAM T_BEGIN T_END T_STRING T_MINUS T_NOT T_INTEGER T_BOOLEAN SEMICOLON prog_instr sequence 
 //%type <bool_val>  
-//%type <int_val> 
-%type <var> cte expr 
+%type <int_val> opu
+%type <var> cte expr
 %%
 
 program : T_PROGRAM T_IDENT prog_instr {fprintf(yyout,"\t.text\n#\t%s\nmain:\n\t%s",$2,$3);};
@@ -128,7 +128,35 @@ expr : cte                      {char buffer [100];
                                   }
                                   $$.val = buffer;
                                   $$.type = $1.type;
-                                };
+                                }
+      | opu expr                {
+                                  if($1 == 0)
+                                  {
+                                    if($2.type == int_val )
+                                    {
+                                      $$.type = int_val;
+                                      $$.val = -1*$$.val;
+                                    }
+                                    else
+                                    {
+                                      yyerror("Syntax error");
+                                    }
+                                    
+                                  }
+                                  else if ($1 == 1)
+                                  {
+                                    if($2.type == bool_val )
+                                    {
+                                      $$.type = bool_val;
+                                      $$.val = !$$.val;
+                                    }
+                                    else
+                                    {
+                                      yyerror("Syntax error");
+                                    }
+                                  }
+                                }
+                                
 
 cte : T_INTEGER                 {$$.val = $1; $$.type = int_val;}
     | T_BOOLEAN                 {$$.val = $1; $$.type = bool_val;};

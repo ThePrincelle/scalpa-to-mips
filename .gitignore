@@ -5,6 +5,7 @@ y.tab.c
 y.tab.h
 lex.yy.c
 scalpa
+temp
 
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode,macos,c,linux,windows
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode,macos,c,linux,windows

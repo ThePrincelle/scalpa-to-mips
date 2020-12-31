@@ -12,8 +12,23 @@
 
 %%
 
+(                               { return T_PAROUV; }
+)                               { return T_PARFER; }
 ;                               { return SEMICOLON; }
 -                               { return T_MINUS; }
++                               { return T_PLUS;  }
+*                               { return T_MULT;  }
+/                               { return T_DIV;   }
+^                               { return T_POW;   }
+<=                              { return T_LE; }
+>=                              { return T_GE; }
+<>                              { return T_NE; }
+<                               { return T_LT; }
+>                               { return T_GT; }
+=                               { return T_EQ; }
+and                             { return T_AND; }
+or                              { return T_OR;  }
+xor                             { return T_XOR; }
 not                             { return T_NOT; }
 program                         { return T_PROGRAM; }
 return                          { return T_RETURN; }

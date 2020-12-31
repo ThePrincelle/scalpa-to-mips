@@ -146,3 +146,4 @@ $RECYCLE.BIN/
 *.lnk
 lex.yy.c
 *.output
+.idea

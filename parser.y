@@ -169,6 +169,8 @@ cte : T_INTEGER                 {$$.val = $1; $$.type = int_val;}
 opu : T_NOT                     {$$ = opu_not;}
     | T_MINUS                   {$$ = opu_minus;};
 
+    + | − | ∗ | / |ˆ| < | <= | > | >= | = | <> | and | or | xor
+
 %%
 
 void yyerror (char *s) {

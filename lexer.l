@@ -26,9 +26,9 @@
 \<                              { return T_LT; }
 \>                              { return T_GT; }
 \=                              { return T_EQ; }
-and                             { return T_AND; }
-or                              { return T_OR;  }
-xor                             { return T_XOR; }
+"and"                           { return T_AND; }
+"or"                            { return T_OR;  }
+"xor"                           { return T_XOR; }
 not                             { return T_NOT; }
 program                         { return T_PROGRAM; }
 return                          { return T_RETURN; }

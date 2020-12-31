@@ -295,11 +295,11 @@ expr : cte                      {
                                     }
                                  }
       | expr T_EQ expr           {
-                                  if ($1.type == int_val && $3.type == int_val)
+                                  if (($1.type == int_val || $1.type == bool_val) && $1.type == $3.type )
                                   {
                                     fprintf(yyout,"\n\tseq $t%d $t%d $t%d", size(variables)-1, size(variables)-1, size(variables));
                                     pop(variables);
-                                    $$.type = bool_val;
+                                    $$.type = $1.type;
                                   }
                                   else
                                   {
@@ -307,11 +307,11 @@ expr : cte                      {
                                   }
                                 } 
       | expr T_NE expr          {
-                                  if ($1.type == int_val && $3.type == int_val)
+                                  if (($1.type == int_val || $1.type == bool_val) && $1.type == $3.type )
                                   {
                                     fprintf(yyout,"\n\tsne $t%d $t%d $t%d", size(variables)-1, size(variables)-1, size(variables));
                                     pop(variables);
-                                    $$.type = bool_val;
+                                    $$.type = $1.type;
                                   }
                                   else
                                   {
@@ -319,7 +319,7 @@ expr : cte                      {
                                   }
                                 }
       | expr T_AND expr         {
-                                  if ($1.type == int_val && $3.type == int_val)
+                                  if ($1.type == bool_val && $3.type == bool_val)
                                   {
                                     fprintf(yyout,"\n\tand $t%d $t%d $t%d", size(variables)-1, size(variables)-1, size(variables));
                                     pop(variables);
@@ -332,7 +332,7 @@ expr : cte                      {
                                 }
                                    
       | expr T_OR expr          {
-                                  if ($1.type == int_val && $3.type == int_val)
+                                  if ($1.type == bool_val && $3.type == bool_val)
                                   {
                                     fprintf(yyout,"\n\tor $t%d $t%d $t%d", size(variables)-1, size(variables)-1, size(variables));
                                     pop(variables);
@@ -344,7 +344,7 @@ expr : cte                      {
                                   }
                                 }
       | expr T_XOR expr         {
-                                  if ($1.type == int_val && $3.type == int_val)
+                                  if ($1.type == bool_val && $3.type == bool_val)
                                   {
                                     fprintf(yyout,"\n\txor $t%d $t%d $t%d", size(variables)-1, size(variables)-1, size(variables));
                                     pop(variables);

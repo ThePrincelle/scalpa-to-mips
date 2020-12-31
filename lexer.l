@@ -4,9 +4,7 @@
 #include <stdbool.h>
 #include "symbols_tab.h"
 #include "pile.h"
-#include "y.tab.h"
-
-
+#include "parser.tab.h"
 %}
 
 %option nounput

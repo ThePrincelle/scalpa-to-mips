@@ -1,8 +1,8 @@
 a.out
 *.o
 *.out
-y.tab.c
-y.tab.h
+*.tab.c
+*.tab.h
 lex.yy.c
 scalpa
 temp

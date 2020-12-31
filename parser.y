@@ -2,6 +2,7 @@
   #include <stdlib.h>
   #include <stdbool.h>
   #include <string.h>
+  #include <stdio.h>
   #include "pile.h"
   #include "symbols_tab.h"
   #include "stdbool.h"
@@ -196,6 +197,7 @@ int main(int argc, char* argv[])
 
   if (yyin == NULL) {
       fprintf(stderr, "unable to open file %s\n", argv[1]);
+      perror("fopen");
       exit(1);
   }
 

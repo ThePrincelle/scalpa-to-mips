@@ -1,7 +1,7 @@
 all: parser.y lexer.l
-	yacc -d -v -d parser.y
-	lex lexer.l
-	gcc y.tab.c lex.yy.c pile.c symbols_tab.c -Wall -o scalpa
+	bison -d parser.y
+	flex lexer.l
+	gcc pile.c symbols_tab.c parser.tab.c lex.yy.c -o scalpa
 
 clean:
-	rm -rf *.o y.tab.c y.tab.h lex.yy.c a.out y.output scalpa temp
+	rm -rf *.o parser.tab.c parser.tab.h lex.yy.c a.out y.output scalpa

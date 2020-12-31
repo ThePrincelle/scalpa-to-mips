@@ -51,7 +51,7 @@ void push(struct stack *pt, int x)
         pt = (struct stack *)realloc(pt, pt->maxsize * sizeof(char*));
     }
  
-    printf("Inserting %d\n", x);
+    // printf("Inserting %d\n", x);
     
     // add an element and increments the top index
     pt->items[++pt->top] = x;
@@ -77,7 +77,7 @@ int pop(struct stack *pt)
         exit(EXIT_FAILURE);
     }
  
-    printf("Removing %d\n", peek(pt));
+    // printf("Removing %d\n", peek(pt));
  
     // decrement stack size by 1 and (optionally) return the popped element
     return pt->items[pt->top--];

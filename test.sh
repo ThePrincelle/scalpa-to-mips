@@ -29,7 +29,7 @@ echo ""
 echo "🔄  Running tests..."
 echo "--------------------"
 echo ""
-for f in $(find "$DIR"/tests/ -name *"${SCALPA_EXT}");
+for f in $(find "$DIR"/tests -name *"${SCALPA_EXT}");
 do
     # Get Relative path
     testfile=".${f#"$DIR"}"

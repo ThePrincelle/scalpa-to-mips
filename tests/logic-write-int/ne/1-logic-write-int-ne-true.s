@@ -3,9 +3,9 @@
 main:
 
 	li $t1 1
-	li $t2 0
+	li $t2 2
 
-	add $t1 $t1 $t2
+	seq $t1 $t1 $t2
 	move $a0 $t1
 	li $v0 1
 	syscall

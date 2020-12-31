@@ -2,10 +2,9 @@
 #	mainOnly
 main:
 
-	li $t1 1
-	li $t2 0
-
-	add $t1 $t1 $t2
+	li $t1 30
+	li $t2 30
+	div $t1 $t1 $t2
 	move $a0 $t1
 	li $v0 1
 	syscall

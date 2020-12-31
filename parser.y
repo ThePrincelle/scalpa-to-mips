@@ -68,6 +68,9 @@
   void init();
 
   struct stack* contextes = NULL;
+  struct stack* variables = NULL;
+
+  bool pow_exist = false;
 %}
 
 %union
@@ -87,19 +90,21 @@
 //Main
 %token T_PROGRAM T_IDENT T_RETURN T_WRITE T_INTEGER T_BOOLEAN T_BEGIN T_END T_STRING T_PAROUV T_PARFER SEMICOLON
 
-
-
 // Operators
 %token T_MINUS T_PLUS T_MULT T_DIV T_POW
 
 // Comparators
 %token T_NOT T_LE T_GE T_NE T_LT T_GT T_EQ T_AND T_OR T_XOR
 
+%left T_PLUS T_MINUS T_OR T_XOR
+%left T_DIV T_MULT T_AND
+%right T_POW
+%right OPUMINUS T_NOT
 
 
-%type <string_val> T_IDENT T_RETURN T_WRITE T_PROGRAM T_BEGIN T_END T_STRING T_MINUS  T_NOT T_INTEGER T_BOOLEAN SEMICOLON prog_instr sequence
+%type <string_val> T_IDENT T_RETURN T_WRITE T_PROGRAM T_BEGIN T_END T_STRING T_MINUS T_NOT T_INTEGER T_BOOLEAN SEMICOLON prog_instr sequence T_PLUS T_MULT T_DIV T_POW T_LE T_GE T_NE T_LT T_GT T_EQ T_AND T_OR T_XOR T_PAROUV T_PARFER
 //%type <bool_val>
-%type <int_val> opu
+%type <int_val> opb
 %type <var> cte expr
 %%
 
@@ -135,22 +140,27 @@ sequence : prog_instr SEMICOLON sequence {
 expr : cte                      {char buffer [100];
                                   if ($1.type == int_val || $1.type == bool_val)
                                   {
-                                    snprintf(buffer,100,"li $a0 %d\n\t",atoi($1.val));
+                                    push(variables, size(contextes));
+                                    snprintf(buffer,100,"li $t%d %d\n\t", size(variables), atoi($1.val));
                                   }
                                   else
                                   {
-                                    snprintf(buffer,100,"li $a0 %d\n\t",atoi($1.val));
+                                    push(variables, size(contextes));
+                                    snprintf(buffer,100,"li $t%d %s\n\t", size(variables), $1.val);
                                   }
                                   $$.val = buffer;
                                   $$.type = $1.type;
                                 }
-      | opu expr                {
+      | T_PAROUV expr T_PARFER  {
+                                  $$.val = $2.val;
+                                  $$.type = $2.type;
+                                }
+      | T_MINUS expr            {
                                   char buffer [100];
-                                  if($1 == opu_minus)
-                                  {
+                                
                                     if($2.type == int_val )
                                     {
-                                      snprintf(buffer,100,"%smul $t6 $a0 -1\n\tmove $a0 $t6\n\t",$2.val);
+                                      snprintf(buffer,100,"%smul $t%d $t%d -1\n\tmove $a0 $t6\n\t", $2.val, size(variables), size(variables));
                                       $$.type = int_val;
                                     }
                                     else
@@ -158,83 +168,210 @@ expr : cte                      {char buffer [100];
                                       yyerror("Syntax error");
                                     }
 
-                                  }
-                                  else if ($1 == opu_not)
+                                  $$.val = buffer;
+                                }%prec OPUMINUS
+      | T_NOT expr              {
+                                  char buffer [100];
+                                 
+                                  if($2.type == bool_val )
                                   {
-                                    if($2.type == bool_val )
-                                    {
-                                      snprintf(buffer,100,"%sseq $t6 $a0 $zero\n\tmove $a0 $t6\n\t",$2.val);
-                                      $$.type = bool_val;
-                                    }
-                                    else
-                                    {
-                                      yyerror("Syntax error");
-                                    }
+                                    snprintf(buffer,100,"%sseq $t%d $t%d $zero\n\tmove $a0 $t6\n\t", $2.val, size(variables), size(variables));
+                                    $$.type = bool_val;
                                   }
+                                  else
+                                  {
+                                    yyerror("Syntax error");
+                                  }
+                                
                                   $$.val = buffer;
                                 }
       | expr opb expr           {
-      			          char buffer [100];
-      			          switch($2)
-      			          {
-      			          	case opb_plus:
-      			        if ($1.type == int_val && $3.type == int_val)
-					    {
-					      snprintf(buffer,100,"%sadd $a0 $a0 $a2\n\tmove $t6\n\t",$2.val);
-					      $$.type = int_val;
-					    }
-					    else
-					    {
-					      yyerror("Syntax error");
-					    }
-					    break;
-					case opb_minus:
-					    break;
-					case opb_mult:
-					    break;
-					case opb_div:
-					    break;
-					case opb_pow:
-					    break;
-					case opb_le:
-					    break;
-					case opb_minus:
-					    break;
-					case opb_lt:
-					    break;
-					case opb_ge:
-					    break;
-					case opb_gt:
-					    break;
-					case opb_eq:
-					    break;
-					case opb_ne:
-					    break;
-					case opb_and:
-					    break;
-					case opb_or:
-					    break;
-					case opb_xor:
-					    break;
-					default:
-					    yyerror("Syntax error");
-					    break;
-				  }
-
-				  $$.val = buffer;
-      				};
-     | T_PAROUV expr T_PARFER           {
-					  $$.val = $2.val;
-					  $$.type = $2.type;
-					}
-
+                                  char buffer [100];
+                                  switch($2)
+                                  {
+                                    case opb_plus:
+                                      if ($1.type == int_val && $3.type == int_val)
+                                      {
+                                        snprintf(buffer,100,"%s%sadd $t%d $t%d $t%d\n\t", $1.val, $3.val, size(variables)-1, size(variables)-1, size(variables));
+                                        pop(variables);
+                                        $$.type = int_val;
+                                      }
+                                      else
+                                      {
+                                        yyerror("Syntax error");
+                                      }
+                                      break;
+                                    case opb_minus:
+                                      if ($1.type == int_val && $3.type == int_val)
+                                      {
+                                        snprintf(buffer,100,"%s%ssub $t%d $t%d $t%d\n\t", $1.val, $3.val, size(variables)-1, size(variables)-1, size(variables));
+                                        pop(variables);
+                                        $$.type = int_val;
+                                      }
+                                      else
+                                      {
+                                        yyerror("Syntax error");
+                                      }
+                                      break;
+                                    case opb_mult:
+                                      if ($1.type == int_val && $3.type == int_val)
+                                      {
+                                        snprintf(buffer,100,"%s%smul $t%d $t%d $t%d\n\t", $1.val, $3.val, size(variables)-1, size(variables)-1, size(variables));
+                                        pop(variables);
+                                        $$.type = int_val;
+                                      }
+                                      else
+                                      {
+                                        yyerror("Syntax error");
+                                      }
+                                      break;
+                                    case opb_div:
+                                      if ($1.type == int_val && $3.type == int_val)
+                                      {
+                                        snprintf(buffer,100,"%s%sdiv $t%d $t%d $t%d\n\t", $1.val, $3.val, size(variables)-1, size(variables)-1, size(variables));
+                                        pop(variables);
+                                        $$.type = int_val;
+                                      }
+                                      else
+                                      {
+                                        yyerror("Syntax error");
+                                      }
+                                      break;
+                                    case opb_pow:
+                                      if ($1.type == int_val && $3.type == int_val)
+                                      {
+                                        if(!pow_exist)
+                                        {
+                                          pow_exist = true;
+                                        }
+                                        char* code = "%s%s\n\tli $a3 $t%d\n\tli $a4 $t%d\n\tjal pow";
+                                        snprintf(buffer,100,code, $1.val, $3.val, size(variables)-1, size(variables));
+                                        pop(variables);
+                                        $$.type = int_val;
+                                      }
+                                      else
+                                      {
+                                        yyerror("Syntax error");
+                                      }
+                                      break;
+                                    case opb_le:
+                                      if ($1.type == int_val && $3.type == int_val)
+                                      {
+                                        snprintf(buffer,100,"%s%ssle $t%d $t%d $t%d\n\t", $1.val, $3.val, size(variables)-1, size(variables)-1, size(variables));
+                                        pop(variables);
+                                        $$.type = bool_val;
+                                      }
+                                      else
+                                      {
+                                        yyerror("Syntax error");
+                                      }
+                                      break;
+                                    case opb_lt:
+                                      if ($1.type == int_val && $3.type == int_val)
+                                      {
+                                        snprintf(buffer,100,"%s%sslt $t%d $t%d $t%d\n\t", $1.val, $3.val, size(variables)-1, size(variables)-1, size(variables));
+                                        pop(variables);
+                                        $$.type = bool_val;
+                                      }
+                                      else
+                                      {
+                                        yyerror("Syntax error");
+                                      }
+                                      break;
+                                    case opb_ge:
+                                      if ($1.type == int_val && $3.type == int_val)
+                                      {
+                                        snprintf(buffer,100,"%s%ssge $t%d $t%d $t%d\n\t", $1.val, $3.val, size(variables)-1, size(variables)-1, size(variables));
+                                        pop(variables);
+                                        $$.type = bool_val;
+                                      }
+                                      else
+                                      {
+                                        yyerror("Syntax error");
+                                      }
+                                      break;
+                                    case opb_gt:
+                                      if ($1.type == int_val && $3.type == int_val)
+                                      {
+                                        snprintf(buffer,100,"%s%ssgt $t%d $t%d $t%d\n\t", $1.val, $3.val, size(variables)-1, size(variables)-1, size(variables));
+                                        pop(variables);
+                                        $$.type = bool_val;
+                                      }
+                                      else
+                                      {
+                                        yyerror("Syntax error");
+                                      }
+                                      break;
+                                    case opb_eq:
+                                      if ($1.type == int_val && $3.type == int_val)
+                                      {
+                                        snprintf(buffer,100,"%s%sseq $t%d $t%d $t%d\n\t", $1.val, $3.val, size(variables)-1, size(variables)-1, size(variables));
+                                        pop(variables);
+                                        $$.type = bool_val;
+                                      }
+                                      else
+                                      {
+                                        yyerror("Syntax error");
+                                      }
+                                      break;
+                                    case opb_ne:
+                                      if ($1.type == int_val && $3.type == int_val)
+                                      {
+                                        snprintf(buffer,100,"%s%ssne $t%d $t%d $t%d\n\t", $1.val, $3.val, size(variables)-1, size(variables)-1, size(variables));
+                                        pop(variables);
+                                        $$.type = bool_val;
+                                      }
+                                      else
+                                      {
+                                        yyerror("Syntax error");
+                                      }
+                                      break;
+                                    case opb_and:
+                                      if ($1.type == int_val && $3.type == int_val)
+                                      {
+                                        snprintf(buffer,100,"%s%sand $t%d $t%d $t%d\n\t", $1.val, $3.val, size(variables)-1, size(variables)-1, size(variables));
+                                        pop(variables);
+                                        $$.type = bool_val;
+                                      }
+                                      else
+                                      {
+                                        yyerror("Syntax error");
+                                      }
+                                      break;
+                                    case opb_or:
+                                      if ($1.type == int_val && $3.type == int_val)
+                                      {
+                                        snprintf(buffer,100,"%s%sor $t%d $t%d $t%d\n\t", $1.val, $3.val, size(variables)-1, size(variables)-1, size(variables));
+                                        pop(variables);
+                                        $$.type = bool_val;
+                                      }
+                                      else
+                                      {
+                                        yyerror("Syntax error");
+                                      }
+                                      break;
+                                    case opb_xor:
+                                      if ($1.type == int_val && $3.type == int_val)
+                                      {
+                                        snprintf(buffer,100,"%s%sxor $t%d $t%d $t%d\n\t", $1.val, $3.val, size(variables)-1, size(variables)-1, size(variables));
+                                        pop(variables);
+                                        $$.type = bool_val;
+                                      }
+                                      else
+                                      {
+                                        yyerror("Syntax error");
+                                      }
+                                      break;
+                                    default:
+                                      yyerror("Syntax error");
+                                      break;
+                                    }
+                                  $$.val = buffer;
+                                };
 
 cte : T_INTEGER                 {$$.val = $1; $$.type = int_val;}
     | T_BOOLEAN                 {$$.val = $1; $$.type = bool_val;}
     | T_STRING                  {$$.val = $1; $$.type = string_val;};
-
-opu : T_NOT                     {$$ = opu_not;}
-    | T_MINUS                   {$$ = opu_minus;};
 
 opb : T_PLUS                    {$$ = opb_plus;}
     | T_MINUS                   {$$ = opb_minus;}
@@ -261,6 +398,15 @@ void yyerror (char *s) {
 void init ()
 {
   contextes = newStack();
+  variables = newStack();
+}
+
+void insert_procedures ()
+{
+  if (pow_exist) {
+    fprintf(yyout, "pow:\n\tmul $a3 $a3 $a3\n\tadd $t9 $t9 1 \n\tbeg $t9 $a4 pow\n\tje $ra");
+  }
+  
 }
 
 int main(int argc, char* argv[])
@@ -293,6 +439,8 @@ int main(int argc, char* argv[])
   yyout = fopen(out_file, "w");
   yyparse();
 
+  insert_procedures();
+  
   fclose(yyin);
   fclose(yyout);
 

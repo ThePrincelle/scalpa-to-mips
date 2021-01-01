@@ -498,39 +498,86 @@ void insert_procedures ()
   }
 }
 
+void version() {
+  fprintf(stderr, "Scalpa to Mips compiler\n");
+  fprintf(stderr, "Usage: ./scalpa [-version] [-o <out_file>] [-tos] file\n\n");
+  fprintf(stderr, "Created by:\n");
+  fprintf(stderr, "- Hugo Brua\n");
+  fprintf(stderr, "- Louis Politanski\n");
+  fprintf(stderr, "- Maxime Princelle\n\n");
+  fprintf(stderr, "More info at: https://share.princelle.org/scalpa-to-mips\n");
+  exit(0);
+}
+
 int main(int argc, char* argv[])
 {
   init();
 
-  if (argc != 2) {
-        fprintf(stderr, "Usage: %s file\n", argv[0]);
+  if (argc < 2) {
+      fprintf(stderr, "Usage: %s [-version] [-o <out_file>] [-tos] file\n", argv[0]);
       exit(1);
   }
 
-  char* in_file = argv[1];
+  char* optin_out_file;
+  bool t_symbols_display = false;
+
+  // Handle options
+  int optind;
+  for (optind = 1; optind < argc && argv[optind][0] == '-'; optind++) {
+    if (strcmp("-o", argv[optind]) == 0) {
+      optin_out_file = argv[optind+1];
+
+    } else if (strcmp("-version", argv[optind]) == 0) {
+      version();
+
+    } else if (strcmp("-tos", argv[optind]) == 0) {
+      t_symbols_display = true;
+
+    } else {
+      fprintf(stderr, "Usage: %s [-version] [-o <out_file>] [-tos] file\n", argv[0]);
+      exit(1);
+    }
+  }
+
+  char* in_file = argv[argc-1];
   int in_file_length = strlen(in_file);
 
   yyin = fopen(in_file, "r");
 
   if (yyin == NULL) {
-      fprintf(stderr, "unable to open file %s\n", argv[1]);
+      fprintf(stderr, "Unable to open file: %s\nDetails: ", argv[1]);
       perror("fopen");
       exit(1);
   }
 
-  char* out_file = strdup(in_file);
-  strcpy(&out_file[in_file_length-4],&out_file[in_file_length]);
-  out_file= strcat(out_file,".s");
+  char* out_file;
 
-  // Erase content of file
+  if (optin_out_file && !optin_out_file[0]) {
+    // No file specified for output, build one from input file.
+    out_file = strdup(in_file);
+    strcpy(&out_file[in_file_length-4],&out_file[in_file_length]);
+    out_file= strcat(out_file,".s");
+
+  } else {
+    // Use specified output file.
+    out_file=strdup(optin_out_file);
+  }
+
+  // Erase content of file and/or create a new one
   fclose(fopen(out_file, "w+"));
 
+  // Open output file
   yyout = fopen(out_file, "w");
   yyparse();
 
   insert_procedures();
 
   vars_to_string(stderr);
+
+  // Display table of symbols if wanted.
+  if (t_symbols_display) {
+    fprintf(stderr, "\n\n__Table des symboles__\n\n");
+  }
 
   fclose(yyin);
   fclose(yyout);

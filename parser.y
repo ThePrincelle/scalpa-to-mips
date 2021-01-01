@@ -612,6 +612,13 @@ int main(int argc, char* argv[])
 
   // Open output file
   yyout = fopen(out_file, "w");
+
+  if (yyout == NULL) {
+      fprintf(stderr, "Unable to open file: %s\nDetails: ", out_file);
+      perror("fopen");
+      exit(1);
+  }
+
   yyparse();
 
   insert_procedures();

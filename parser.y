@@ -135,7 +135,7 @@
 
 %type <string_val> prog_instr sequence program varsdecl T_IDENT T_INTEGER T_BOOLEAN T_BEGIN T_STRING
 //%type <bool_val>
-%type <int_val> typename atomictype 
+%type <int_val> typename atomictype
 %type <identlist_val> identlist
 %type <variable_val> lvalue
 %type <var> cte expr
@@ -156,7 +156,7 @@ varsdecl : T_VAR identlist D_POINT typename                         {
                                                                         snprintf(varscalpa,100,"%s",current_ident->ident);
 
                                                                         bool inserted = insertVar(varscalpa, size(contextes), $4);
-                                                                        
+
                                                                         if(!inserted)
                                                                         {
                                                                           yyerror("Syntax error (inserted)");
@@ -210,7 +210,7 @@ prog_instr : T_RETURN               {}
 
                                     $1->init = true;
 
-                                     
+
                                     fprintf(yyout,"\n\tsw $t%d %d($sp)", size(vars_temp_mips), $1->p_memoire);
                                     pop(vars_temp_mips);
                                   }
@@ -235,9 +235,9 @@ lvalue : T_IDENT                {
                                   {
                                     yyerror("Syntax error (context)");
                                   }
-                                  
 
-                                  $$ = var; 
+
+                                  $$ = var;
                                 }
        //| ident [ exprlist ]
 
@@ -366,7 +366,7 @@ expr : cte                      {
                                       $$.type = bool_val;
                                     }
                                     else
-                                    { 
+                                    {
                                       yyerror("Syntax error (type)");
                                     }
                                  }
@@ -554,13 +554,13 @@ int main(int argc, char* argv[])
 
   if (optin_out_file && !optin_out_file[0]) {
     // No file specified for output, build one from input file.
-    out_file = strdup(in_file);
-    strcpy(&out_file[in_file_length-4],&out_file[in_file_length]);
-    out_file= strcat(out_file,".s");
+    out_file=strdup(optin_out_file);
 
   } else {
     // Use specified output file.
-    out_file=strdup(optin_out_file);
+    out_file = strdup(in_file);
+    strcpy(&out_file[in_file_length-4],&out_file[in_file_length]);
+    out_file = strcat(out_file,".s");
   }
 
   // Erase content of file and/or create a new one

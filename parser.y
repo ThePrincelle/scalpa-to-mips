@@ -6,12 +6,13 @@
   #include "pile.h"
   #include "symbols_tab.h"
   #include "variables_tab.h"
+  #include "varArray.h"
   #include "abstract_syntax_tree.h"
 
   extern int yylex();
   extern FILE *yyin;
   extern FILE *yyout;
-  enum type {int_val, bool_val, string_val, unit_val};
+  enum type {int_val, bool_val, string_val, unit_val,array_val};
   enum op_unaire {opu_minus, opu_not};
   enum op_arith {opb_plus, opb_minus, opb_mult, opb_div, opb_pow, opb_le, opb_lt, opb_ge, opb_gt, opb_eq, opb_ne, opb_and, opb_or, opb_xor};
 
@@ -23,20 +24,36 @@
   int nextquad = 0;
 
 
-  typedef struct identliste{
+  typedef struct identlist_type{
       char* ident;
-      struct identliste* suivant;
-  }identliste;
+      struct identlist_type* suivant;
+  }identlist_type;
 
-  identliste* creIdentlist(char* ident) { /** permet l'insertion d'une nouvelle instruction dans la liste de lecture du code **/
-    identliste* new = malloc(sizeof(struct identliste*));
+  identlist_type* creIdentlist(char* ident) { /** permet l'insertion d'une nouvelle instruction dans la liste de lecture du code **/
+    identlist_type* new = malloc(sizeof(identlist_type*));
     new->ident = ident;
     new->suivant = NULL;
     return new;
   }
 
-  identliste* concatIdentlist(identliste* l1, identliste* l2) { /** permet l'insertion d'une instruction dans une liste de lecture du code **/
-    identliste* res;
+  arraytype_type* creArray(int type,rangelist_type* rangelist) { /** permet l'insertion d'une nouvelle instruction dans la liste de lecture du code **/
+    arraytype_type* new = malloc(sizeof(arraytype_type*));
+    new->type = type;
+    new->rangelist = rangelist;
+    return new;
+  }
+
+  rangelist_type* creRangelist(int deb, int fin) { /** permet l'insertion d'une nouvelle instruction dans la liste de lecture du code **/
+    rangelist_type* new = malloc(sizeof(rangelist_type*));
+    new->deb = deb;
+    new->fin = fin;
+    new->length = (fin - deb)+1; 
+    new->suivant = NULL;
+    return new;
+  }
+
+  identlist_type* concatIdentlist(identlist_type* l1, identlist_type* l2) { /** permet l'insertion d'une instruction dans une liste de lecture du code **/
+    identlist_type* res;
     if (l1 != NULL) res = l1;
     else if (l2 != NULL) res = l2;
          else res = NULL;
@@ -103,7 +120,9 @@
 
 %union
 {
-  struct identliste* identlist_val;
+  struct identlist_type* identlist_val;
+  struct rangelist_type* rangelist_val;
+  struct arraytype_type* arraytype_val;
   int bool_val;
   int int_val;
   char* string_val;
@@ -126,17 +145,20 @@
 // Comparators
 %token T_NOT T_LE T_GE T_NE T_LT T_GT T_EQ T_AND T_OR T_XOR
 
-%nonassoc T_LE T_GE T_NE T_LT T_GT T_EQ
-%left T_PLUS T_MINUS T_OR T_XOR
+%nonassoc T_LE T_GE T_NE T_LT T_GT T_EQ vardeclatomic
+%left T_PLUS T_MINUS T_OR T_XOR 
 %left T_DIV T_MULT T_AND
 %right T_POW
 %right OPUMINUS T_NOT
+%left vardeclarray
 
 
 %type <string_val> prog_instr sequence program varsdecl T_IDENT T_INTEGER T_BOOLEAN T_BEGIN T_STRING
 //%type <bool_val>
-%type <int_val> typename atomictype
+%type <int_val> atomictype
 %type <identlist_val> identlist
+%type <arraytype_val> arraytype
+%type <rangelist_val> rangelist
 %type <variable_val> lvalue
 %type <var> cte expr
 
@@ -148,16 +170,16 @@ vardecllist : varsdecl                                              {}
             | varsdecl SEMICOLON vardecllist                        {}
             |                                                       {};
 
-varsdecl : T_VAR identlist D_POINT typename                         {
-                                                                      identliste* current_ident = $2;
+varsdecl : T_VAR identlist D_POINT atomictype                       {
+                                                                      identlist_type* current_ident = $2;
                                                                       while(current_ident != NULL)
                                                                       {
                                                                         char varscalpa[100];
                                                                         snprintf(varscalpa,100,"%s",current_ident->ident);
 
-                                                                        bool inserted = insertVar(varscalpa, size(contextes), $4);
+                                                                        variable* inserted = insertVar(varscalpa, size(contextes), $4);
 
-                                                                        if(!inserted)
+                                                                        if(inserted == NULL)
                                                                         {
                                                                           yyerror("Syntax error (inserted)");
                                                                         }
@@ -165,28 +187,48 @@ varsdecl : T_VAR identlist D_POINT typename                         {
                                                                         current_ident = current_ident->suivant;
                                                                       }
 
-                                                                    };
+                                                                    }%prec vardeclatomic
+          |   T_VAR identlist D_POINT arraytype                     {
+                                                                      identlist_type* current_ident = $2;
+                                                                      while(current_ident != NULL)
+                                                                      {
+                                                                        char varscalpa[100];
+                                                                        snprintf(varscalpa,100,"%s",current_ident->ident);
 
+                                                                        varArray* inserted = insertArray(varscalpa, size(contextes), $4);
+
+                                                                        if(inserted == NULL)
+                                                                        {
+                                                                          yyerror("Syntax error (inserted)");
+                                                                        }
+
+                                                                        current_ident = current_ident->suivant;
+                                                                      }
+                                                                    }%prec vardeclarray;
 identlist : T_IDENT                                                 {
-                                                                      identliste* temp_ident = creIdentlist($1);
+                                                                      identlist_type* temp_ident = creIdentlist($1);
                                                                       $$ = temp_ident;
                                                                     }
           | T_IDENT COMMA identlist                                 {
-                                                                      identliste* temp_ident = creIdentlist($1);
-                                                                      identliste* concact_ident = concatIdentlist(temp_ident, $3);
+                                                                      identlist_type* temp_ident = creIdentlist($1);
+                                                                      identlist_type* concact_ident = concatIdentlist(temp_ident, $3);
                                                                       $$ = concact_ident;
                                                                     };
 
-typename : atomictype                                               {$$ = $1;}
-         //| arraytype                                                {};
+/*typename : atomictype                                               {$$ = $1;} /!\ est supprimer: pense-bête ne pas enlver !!!
+         | arraytype                                                {};*/
 
 atomictype : T_UNIT                                                 {$$ = unit_val;}
            | T_BOOL                                                 {$$ = bool_val;}
            | T_INT                                                  {$$ = int_val;}
 
-/*arraytype : T_ARRAY T_BRAOUV rangelist T_BRAFER T_OF atomictype     {}
-rangelist : T_INTEGER PP T_INTEGER                                  {}
-          | T_INTEGER PP T_INTEGER COMMA rangelist                  {}*/
+arraytype : T_ARRAY T_BRAOUV rangelist T_BRAFER T_OF atomictype     {
+                                                                      $$ = creArray($6,$3);
+                                                                    }
+rangelist : T_INTEGER PP T_INTEGER                                  { 
+                                                                      $$ = creRangelist(atoi($1),atoi($3));
+                                                                    }
+          //| T_INTEGER PP T_INTEGER COMMA rangelist                  {}
 
 prog_instr : T_RETURN               {}
            | T_RETURN expr          {}
@@ -201,6 +243,7 @@ prog_instr : T_RETURN               {}
                                      {
                                       fprintf(yyout,"\n\tmove $a0 $t%d\n\tli $v0 4\n\tsyscall", size(vars_temp_mips));
                                      }
+                                     pop(vars_temp_mips);
                                     };
            | lvalue ASSIGN expr   {
                                     if($3.type != (int)$1->type)
@@ -488,7 +531,8 @@ void init ()
 {
   contextes = newStack();
   vars_temp_mips = newStack();
-  initVarArray();
+  initVarTab();
+  initArrayTab();
 }
 
 void insert_procedures ()

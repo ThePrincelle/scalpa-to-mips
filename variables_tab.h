@@ -16,11 +16,12 @@ typedef struct variable {
   char* scalpavar;
   int type;
   bool init;
+  bool array;
 }variable;
 
 
 // Utility function to initialize vars_array
-void initVarArray();
+void initVarTab();
 
 /*
   Function that returns the saved variables in a given char address.
@@ -36,5 +37,7 @@ variable* getVar(char* varName);
 /*
   Function that returns the result of the insertion in the vars_array.
 */
-bool insertVar(char* varName, int context, int type);
+variable* insertVar(char* varName, int context, int type);
+
+variable* newVar(char* varName, int context, int type);
 #endif

@@ -6,7 +6,7 @@ int vars_capacity = 10;
 variable** vars_array;
 
 // Utility function to initialize vars_array
-void initVarArray()
+void initVarTab()
 {
     vars_array = malloc(vars_capacity*sizeof(variable*));
 }
@@ -44,7 +44,7 @@ void vars_to_string(FILE *returns)
 /*
   Function that returns the result of the insertion in the vars_array.
 */
-bool insertVar(char* varName, int context, int type){
+variable* insertVar(char* varName, int context, int type){
     // Retrieve the variable position in the table.
     variable* old_var = getVar(varName);
 
@@ -57,8 +57,14 @@ bool insertVar(char* varName, int context, int type){
         return false;
       }
     }
+    variable* new_var = newVar(varName, context, type);
+    // Variable successfully added. Return true then.
+    return new_var;
+}
 
-    // If we add the variable in the table, update the variable_capacity
+variable* newVar(char* varName, int context, int type)
+{
+  // If we add the variable in the table, update the variable_capacity
     if (vars_count >= vars_capacity) {
         vars_capacity*=2;
         vars_array = (variable**)realloc(vars_array, vars_capacity * sizeof(variable*));
@@ -75,6 +81,5 @@ bool insertVar(char* varName, int context, int type){
     vars_array[vars_count] = new_var;
     vars_count++;
 
-    // Variable successfully added. Return true then.
-    return true;
+    return new_var;
 }

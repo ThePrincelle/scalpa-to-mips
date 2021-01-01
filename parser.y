@@ -22,10 +22,54 @@
   quadrup QUAD[100];
   int nextquad = 0;
 
+  typedef struct variable {
+    int context;
+    char* mipsvar;
+    char* scalpavar;
+  }variable;
+  variable tab_var[100];
+  int nextvar = 0;
+
+  typedef struct identliste{
+      char* ident;
+      struct identliste* suivant;
+  }identliste;
+
+  identliste* creIdentlist(char* ident) { /** permet l'insertion d'une nouvelle instruction dans la liste de lecture du code **/
+    identliste* new = malloc(sizeof(identliste));
+    new->ident = ident;
+    new->suivant = NULL;
+    return new;
+  }
+
+  identliste* concatIdentlist(identliste* l1, identliste* l2) { /** permet l'insertion d'une instruction dans une liste de lecture du code **/
+    identliste* res;
+    if (l1 != NULL) res = l1;
+    else if (l2 != NULL) res = l2;
+         else res = NULL;
+    if (l1 != NULL) {
+      while (l1->suivant!=NULL) {
+        l1 = l1->suivant;
+      }
+      l1->suivant = l2;
+    }
+    return res;
+  }
+
+  void addVar(char* scalpavar,char* mipsvar, int context){
+    struct variable temp_var;
+    nextvar ++;
+    temp_var.scalpavar = scalpavar;
+    temp_var.mipsvar = mipsvar;
+    temps_var.context = context;
+    tab_var[nextvar] = temp_var;
+  }
+
   typedef struct lpos { /** liste de lecture du code **/
   int position;
   struct lpos* suivant;
   } lpos;
+  
 
   lpos* crelist(int position) { /** permet l'insertion d'une nouvelle instruction dans la liste de lecture du code **/
     lpos* new = malloc(sizeof(lpos));
@@ -76,6 +120,7 @@
 
 %union
 {
+  identliste* identlist_val;
   int bool_val;
   int int_val;
   char* string_val;
@@ -109,6 +154,7 @@
 %type <string_val> prog_instr sequence program identlist vardecllist varsdecl typename atomictype arraytype rangelist T_IDENT T_INTEGER T_BOOLEAN T_BEGIN T_STRING
 //%type <bool_val>
 //%type <int_val> 
+%type <identlist_val> identlist
 %type <var> cte expr
 %%
 
@@ -119,10 +165,17 @@ vardecllist :
             | varsdecl                                              {}
             | varsdecl SEMICOLON vardecllist                        {};
 
-varsdecl : T_VAR D_POINT identlist D_POINT typename                 {};
+varsdecl : T_VAR identlist D_POINT typename                         {};
 
-identlist : T_IDENT                                                 {}
-          | T_IDENT COMMA identlist                                 {};
+identlist : T_IDENT                                                 { 
+                                                                      identliste* temp_ident = creIdentlist($1)
+                                                                      $$ == temp_ident;
+                                                                    }
+          | T_IDENT COMMA identlist                                 {
+                                                                      identliste* temp_ident = creIdentlist($1)
+                                                                      indentliste* concact_ident = concactIdentlist(temp_ident, $3)
+                                                                      $$ == concact_ident;
+                                                                    };
 
 typename : atomictype                                               {}
          | arraytype                                                {};

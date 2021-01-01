@@ -17,25 +17,39 @@ struct variable** vars_array;
   Function that simply returns the code of the variable given in the array of variables.
   If the variable does not exists, return NULL.
 */
-struct variable* getVar(char* varName){
+struct variable* getVar(char* varName, FILE *returns){
     int i;
     for (i = 1; i < vars_count; i++){
         // For each variable in the table, compare if it is the same as the input variable.
+        fprintf(returns, "get_var i: %d\n", i);
+        fprintf(returns, "get_var vars_count: %d\n", vars_count);
         if (strcmp(vars_array[i]->scalpavar, varName) == 0){
             return vars_array[i]; // Return the position of the variable in the table
         }
     }
+
     return NULL;
+}
+
+/*
+  Function that returns the saved variables in a given char address.
+*/
+void vars_to_string(FILE *returns)
+{
+  int i;
+  fprintf(returns, "vars_count: %d\n", vars_count);
+  struct variable* act_val = vars_array[2];
+  fprintf(returns, "type: %d -- context: %d\n", act_val->type, act_val->context);
 }
 
 /*
   Function that returns the result of the insertion in the vars_array.
 */
-bool insertVar(char* varName, char* mipsvar, int context, int type){
+bool insertVar(char* varName, char* mipsvar, int context, int type, FILE *returns){
     int i;
 
     // Retrieve the variable position in the table.
-    struct variable* old_var = getVar(varName);
+    struct variable* old_var = getVar(varName, returns);
 
     // If the variable doesn't exist, create it.
     if(old_var != NULL)
@@ -66,6 +80,8 @@ bool insertVar(char* varName, char* mipsvar, int context, int type){
     new_var->mipsvar = mipsvar_txt;
     new_var->context = context;
     new_var->type = type;
+
+    fprintf(returns, "vars_array[%d]: type: %d -- context: %d\n", vars_count, new_var->type, new_var->context);
 
     vars_array[vars_count] = new_var;
     vars_count++;

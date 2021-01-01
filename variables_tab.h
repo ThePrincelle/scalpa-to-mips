@@ -15,13 +15,18 @@ struct variable;
 struct variable** vars_array;
 
 /*
+  Function that returns the saved variables in a given char address.
+*/
+void vars_to_string(FILE *returns);
+
+/*
   Function that simply returns the code of the variable given in the array of variables.
   If the variable does not exists, return NULL.
 */
-struct variable* getVar(char* varName);
+struct variable* getVar(char* varName, FILE *returns);
 
 /*
   Function that returns the result of the insertion in the vars_array.
 */
-bool insertVar(char* varName, char* mipsvar, int context, int type);
+bool insertVar(char* varName, char* mipsvar, int context, int type, FILE *returns);
 #endif

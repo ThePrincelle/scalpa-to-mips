@@ -1,3 +1,3 @@
 program mainOnly
-  var i_,j_,max : int
+  var i,j,max : int
   write false

@@ -95,11 +95,8 @@
 
   void init();
 
-  //void showVariable();
-
   struct stack* contextes = NULL;
   struct stack* vars_temp_mips = NULL;
-  int i = 0;
 
   bool pow_exist = false;
 %}
@@ -155,11 +152,11 @@ varsdecl : T_VAR identlist D_POINT typename                         {
                                                                       {
                                                                         char varmips[100];
                                                                         snprintf(varmips,100,"$s%d",vars_count); /** @TODO: Talle max des $s et on peux avoir $S6 dans deux fonction de meme niveau de context ici pas géré **/
-                                                                        bool inserted = insertVar(current_ident->ident, varmips, size(contextes), $4);
+                                                                        bool inserted = insertVar(current_ident->ident, varmips, size(contextes), $4, stderr);
 
                                                                         if(!inserted)
                                                                         {
-                                                                          yyerror("Syntax errort");
+                                                                          yyerror("Syntax error");
                                                                         }
 
                                                                         current_ident = current_ident->suivant;
@@ -453,14 +450,6 @@ void insert_procedures ()
   }
 }
 
-/*void showVariable()
-{
-  for (i = 1; i < vars_count; i++){
-      // For each variable in the table, compare if it is the same as the input variable.
-      fprintf(stderr, "Var %s : %s\n", vars_array[i]->scalpavar, vars_array[i]->mipsvar);
-  }
-}*/
-
 int main(int argc, char* argv[])
 {
   init();
@@ -493,7 +482,7 @@ int main(int argc, char* argv[])
 
   insert_procedures();
 
-  //showVariable();
+  vars_to_string(stderr);
 
   fclose(yyin);
   fclose(yyout);

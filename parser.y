@@ -5,7 +5,7 @@
   #include <stdio.h>
   #include "pile.h"
   #include "symbols_tab.h"
-  #include "stdbool.h"
+  #include "variables_tab.h"
   #include "abstract_syntax_tree.h"
 
   extern int yylex();
@@ -22,29 +22,21 @@
   quadrup QUAD[100];
   int nextquad = 0;
 
-  typedef struct variable {
-    int context;
-    char* mipsvar;
-    char* scalpavar;
-    int type;
-  }variable;
-  variable tab_var[100];
-  int nextvar = 0;
 
-  typedef struct identliste{
+  struct identliste{
       char* ident;
       struct identliste* suivant;
-  }identliste;
+  };
 
-  identliste* creIdentlist(char* ident) { /** permet l'insertion d'une nouvelle instruction dans la liste de lecture du code **/
-    identliste* new = malloc(sizeof(identliste));
+  struct identliste* creIdentlist(char* ident) { /** permet l'insertion d'une nouvelle instruction dans la liste de lecture du code **/
+    struct identliste* new = malloc(sizeof(struct identliste*));
     new->ident = ident;
     new->suivant = NULL;
     return new;
   }
 
-  identliste* concatIdentlist(identliste* l1, identliste* l2) { /** permet l'insertion d'une instruction dans une liste de lecture du code **/
-    identliste* res;
+  struct identliste* concatIdentlist(struct identliste* l1, struct identliste* l2) { /** permet l'insertion d'une instruction dans une liste de lecture du code **/
+    struct identliste* res;
     if (l1 != NULL) res = l1;
     else if (l2 != NULL) res = l2;
          else res = NULL;
@@ -57,20 +49,11 @@
     return res;
   }
 
-  void addVar(char* scalpavar,char* mipsvar, int context){
-    struct variable temp_var;
-    nextvar ++;
-    temp_var.scalpavar = scalpavar;
-    temp_var.mipsvar = mipsvar;
-    temps_var.context = context;
-    tab_var[nextvar] = temp_var;
-  }
-
   typedef struct lpos { /** liste de lecture du code **/
   int position;
   struct lpos* suivant;
   } lpos;
-  
+
 
   lpos* crelist(int position) { /** permet l'insertion d'une nouvelle instruction dans la liste de lecture du code **/
     lpos* new = malloc(sizeof(lpos));
@@ -112,8 +95,10 @@
 
   void init();
 
+  //void showVariable();
+
   struct stack* contextes = NULL;
-  struct stack* variables = NULL;
+  struct stack* vars_temp_mips = NULL;
   int i = 0;
 
   bool pow_exist = false;
@@ -121,7 +106,7 @@
 
 %union
 {
-  identliste* identlist_val;
+  struct identliste* identlist_val;
   int bool_val;
   int int_val;
   char* string_val;
@@ -135,7 +120,7 @@
 %start program
 
 //Main
-%token T_PROGRAM T_IDENT T_RETURN T_WRITE T_INTEGER T_BOOLEAN T_BEGIN T_END T_STRING T_PAROUV T_PARFER T_VAR T_BRAOUV T_BRAFER SEMICOLON D_POINT COMMA
+%token T_PROGRAM T_IDENT T_RETURN T_WRITE T_INTEGER T_BOOLEAN T_BEGIN T_END T_STRING T_PAROUV T_PARFER T_VAR T_BRAOUV T_BRAFER SEMICOLON D_POINT COMMA T_UNIT T_ARRAY T_INT T_BOOL T_OF PP
 
 // Operators
 %token T_MINUS T_PLUS T_MULT T_POW
@@ -143,48 +128,52 @@
 // Comparators
 %token T_NOT T_LE T_GE T_NE T_LT T_GT T_EQ T_AND T_OR T_XOR
 
-<%
-
 %nonassoc T_LE T_GE T_NE T_LT T_GT T_EQ
 %left T_PLUS T_MINUS T_OR T_XOR
 %left T_DIV T_MULT T_AND
 %right T_POW
 %right OPUMINUS T_NOT
 
- 
-%type <string_val> prog_instr sequence program vardecllist varsdecl arraytype rangelist T_IDENT T_INTEGER T_BOOLEAN T_BEGIN T_STRING
+
+%type <string_val> prog_instr sequence program varsdecl T_IDENT T_INTEGER T_BOOLEAN T_BEGIN T_STRING
 //%type <bool_val>
 %type <int_val> typename atomictype
 %type <identlist_val> identlist
 %type <var> cte expr
+
 %%
 
-program : T_PROGRAM T_IDENT  {fprintf(yyout,"\t.text\n#\t%s\nmain:",$2);} prog_instr {fprintf(yyout,"\n\tli $v0 10\n\tsyscall");};
+program : T_PROGRAM T_IDENT  {fprintf(yyout,"\t.text\n#\t%s\nmain:",$2);} vardecllist prog_instr {fprintf(yyout,"\n\tli $v0 10\n\tsyscall");};
 
-vardecllist : 
-            |                                                       {}
-            | varsdecl                                              {}
-            | varsdecl SEMICOLON vardecllist                        {};
+vardecllist : varsdecl                                              {}
+            | varsdecl SEMICOLON vardecllist                        {}
+            |                                                       {};
 
 varsdecl : T_VAR identlist D_POINT typename                         {
-                                                                      identliste* current_ident = $2;
+                                                                      struct identliste* current_ident = $2;
                                                                       while(current_ident != NULL)
                                                                       {
                                                                         char varmips[100];
-                                                                        snprintf(varmips,100,"$s%d",size(nextvar)); /** @TODO: Talle max des $s et on peux avoir $S6 dans deux fonction de meme niveau de context ici pas géré **/
-                                                                        addVar(current_ident->ident, varmips, size(contextes), $4);
+                                                                        snprintf(varmips,100,"$s%d",vars_count); /** @TODO: Talle max des $s et on peux avoir $S6 dans deux fonction de meme niveau de context ici pas géré **/
+                                                                        bool inserted = insertVar(current_ident->ident, varmips, size(contextes), $4);
+
+                                                                        if(!inserted)
+                                                                        {
+                                                                          yyerror("Syntax errort");
+                                                                        }
+
                                                                         current_ident = current_ident->suivant;
                                                                       }
-                                                                      
+
                                                                     };
 
-identlist : T_IDENT                                                 { 
-                                                                      identliste* temp_ident = creIdentlist($1);
+identlist : T_IDENT                                                 {
+                                                                      struct identliste* temp_ident = creIdentlist($1);
                                                                       $$ = temp_ident;
                                                                     }
           | T_IDENT COMMA identlist                                 {
-                                                                      identliste* temp_ident = creIdentlist($1);
-                                                                      indentliste* concact_ident = concactIdentlist(temp_ident, $3);
+                                                                      struct identliste* temp_ident = creIdentlist($1);
+                                                                      struct identliste* concact_ident = concatIdentlist(temp_ident, $3);
                                                                       $$ = concact_ident;
                                                                     };
 
@@ -195,22 +184,22 @@ atomictype : T_UNIT                                                 {$$ = unit_v
            | T_BOOL                                                 {$$ = bool_val}
            | T_INT                                                  {$$ = int_val}
 
-arraytype : T_ARRAY T_BRAOUV rangelist T_BRAFER T_OF atomictype     {}
+/*arraytype : T_ARRAY T_BRAOUV rangelist T_BRAFER T_OF atomictype     {}
 rangelist : T_INTEGER PP T_INTEGER                                  {}
-          | T_INTEGER PP T_INTEGER COMMA rangelist                  {}
+          | T_INTEGER PP T_INTEGER COMMA rangelist                  {}*/
 
 prog_instr : T_RETURN               {}
            | T_RETURN expr          {}
            | T_BEGIN {push(contextes, 0);} sequence T_END {$$ = $1; pop(contextes);}
-           | T_BEGIN T_END          {}
+         | T_BEGIN T_END          { /**delete all var inner current context**/}
            | T_WRITE expr           {
                                      if ($2.type == int_val || $2.type == bool_val)
                                      {
-                                      fprintf(yyout,"\n\tmove $a0 $t%d\n\tli $v0 1\n\tsyscall", size(variables));
+                                      fprintf(yyout,"\n\tmove $a0 $t%d\n\tli $v0 1\n\tsyscall", size(vars_temp_mips));
                                      }
                                      else
                                      {
-                                      fprintf(yyout,"\n\tmove $a0 $t%d\n\tli $v0 4\n\tsyscall", size(variables));
+                                      fprintf(yyout,"\n\tmove $a0 $t%d\n\tli $v0 4\n\tsyscall", size(vars_temp_mips));
                                      }
                                     };
 
@@ -218,20 +207,20 @@ sequence : prog_instr SEMICOLON sequence {
 
                                           }
          | prog_instr SEMICOLON          {
-          
+
                                           }
          | prog_instr                     { $$ = $1 ;};
 
 expr : cte                      {
                                   if ($1.type == int_val || $1.type == bool_val)
                                   {
-                                    push(variables, size(contextes));
-                                    fprintf(yyout,"\n\tli $t%d %d",size(variables), atoi($1.val));
+                                    push(vars_temp_mips, size(contextes));
+                                    fprintf(yyout,"\n\tli $t%d %d",size(vars_temp_mips), atoi($1.val));
                                   }
                                   else
                                   {
-                                    push(variables, size(contextes));
-                                    fprintf(yyout,"\n\tli $t%d %s",size(variables) ,$1.val);
+                                    push(vars_temp_mips, size(contextes));
+                                    fprintf(yyout,"\n\tli $t%d %s",size(vars_temp_mips) ,$1.val);
                                   }
                                   $$.type = $1.type;
                                 }
@@ -240,39 +229,36 @@ expr : cte                      {
                                   $$.type = $2.type;
                                 }
       | T_MINUS expr            {
-                                  
-                                
                                     if($2.type == int_val )
                                     {
-                                      fprintf(yyout,"\n\tmul $t%d $t%d -1\n\tmove $a0 $t6", size(variables), size(variables));
+                                      fprintf(yyout,"\n\tmul $t%d $t%d -1\n\tmove $a0 $t6", size(vars_temp_mips), size(vars_temp_mips));
                                       $$.type = int_val;
                                     }
                                     else
                                     {
                                       yyerror("Syntax error");
                                     }
-
                                 }%prec OPUMINUS
       | T_NOT expr              {
 
-                                 
+
                                   if($2.type == bool_val )
                                   {
-                                    fprintf(yyout,"\n\tseq $t%d $t%d $zero\n\tmove $a0 $t6", size(variables), size(variables));
+                                    fprintf(yyout,"\n\tseq $t%d $t%d $zero\n\tmove $a0 $t6", size(vars_temp_mips), size(vars_temp_mips));
                                     $$.type = bool_val;
                                   }
                                   else
                                   {
                                     yyerror("Syntax error");
                                   }
-                              
+
                                 }
       | expr T_PLUS expr           {
 
                                     if ($1.type == int_val && $3.type == int_val)
                                     {
-                                      fprintf(yyout,"\n\tadd $t%d $t%d $t%d", size(variables)-1, size(variables)-1, size(variables));
-                                      pop(variables);
+                                      fprintf(yyout,"\n\tadd $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
+                                      pop(vars_temp_mips);
                                       $$.type = int_val;
                                     }
                                     else
@@ -283,8 +269,8 @@ expr : cte                      {
       | expr T_MINUS expr         {
                                     if ($1.type == int_val && $3.type == int_val)
                                     {
-                                      fprintf(yyout,"\n\tsub $t%d $t%d $t%d",size(variables)-1, size(variables)-1, size(variables));
-                                      pop(variables);
+                                      fprintf(yyout,"\n\tsub $t%d $t%d $t%d",size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
+                                      pop(vars_temp_mips);
                                       $$.type = int_val;
                                     }
                                     else
@@ -295,8 +281,8 @@ expr : cte                      {
     | expr T_MULT expr            {
                                     if ($1.type == int_val && $3.type == int_val)
                                       {
-                                        fprintf(yyout,"\n\tmul $t%d $t%d $t%d", size(variables)-1, size(variables)-1, size(variables));
-                                        pop(variables);
+                                        fprintf(yyout,"\n\tmul $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
+                                        pop(vars_temp_mips);
                                         $$.type = int_val;
                                       }
                                       else
@@ -307,8 +293,8 @@ expr : cte                      {
     | expr T_DIV expr            {
                                     if ($1.type == int_val && $3.type == int_val)
                                       {
-                                        fprintf(yyout,"\n\tdiv $t%d $t%d $t%d", size(variables)-1, size(variables)-1, size(variables));
-                                        pop(variables);
+                                        fprintf(yyout,"\n\tdiv $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
+                                        pop(vars_temp_mips);
                                         $$.type = int_val;
                                       }
                                       else
@@ -324,8 +310,8 @@ expr : cte                      {
                                         pow_exist = true;
                                       }
                                       char* code = "\n\tmove $a2 $t%d\n\tmove $a3 $t%d\n\tmove $t8 $a2\n\tjal pow\n\tmove $t%d $t8";
-                                      fprintf(yyout,code, size(variables)-1, size(variables), size(variables)-1);
-                                      pop(variables);
+                                      fprintf(yyout,code, size(vars_temp_mips)-1, size(vars_temp_mips), size(vars_temp_mips)-1);
+                                      pop(vars_temp_mips);
                                       $$.type = int_val;
                                     }
                                     else
@@ -336,8 +322,8 @@ expr : cte                      {
     | expr T_LE expr             {
                                     if ($1.type == int_val && $3.type == int_val)
                                     {
-                                      fprintf(yyout,"\n\tsle $t%d $t%d $t%d", size(variables)-1, size(variables)-1, size(variables));
-                                      pop(variables);
+                                      fprintf(yyout,"\n\tsle $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
+                                      pop(vars_temp_mips);
                                       $$.type = bool_val;
                                     }
                                     else
@@ -348,8 +334,8 @@ expr : cte                      {
       | expr T_LT expr           {
                                     if ($1.type == int_val && $3.type == int_val)
                                     {
-                                      fprintf(yyout,"\n\tslt $t%d $t%d $t%d", size(variables)-1, size(variables)-1, size(variables));
-                                      pop(variables);
+                                      fprintf(yyout,"\n\tslt $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
+                                      pop(vars_temp_mips);
                                       $$.type = bool_val;
                                     }
                                     else
@@ -360,8 +346,8 @@ expr : cte                      {
       | expr T_GE expr           {
                                     if ($1.type == int_val && $3.type == int_val)
                                     {
-                                      fprintf(yyout,"\n\tsge $t%d $t%d $t%d", size(variables)-1, size(variables)-1, size(variables));
-                                      pop(variables);
+                                      fprintf(yyout,"\n\tsge $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
+                                      pop(vars_temp_mips);
                                       $$.type = bool_val;
                                     }
                                     else
@@ -372,8 +358,8 @@ expr : cte                      {
       | expr T_GT expr           {
                                     if ($1.type == int_val && $3.type == int_val)
                                     {
-                                      fprintf(yyout,"\n\tsgt $t%d $t%d $t%d", size(variables)-1, size(variables)-1, size(variables));
-                                      pop(variables);
+                                      fprintf(yyout,"\n\tsgt $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
+                                      pop(vars_temp_mips);
                                       $$.type = bool_val;
                                     }
                                     else
@@ -384,20 +370,20 @@ expr : cte                      {
       | expr T_EQ expr           {
                                   if (($1.type == int_val || $1.type == bool_val) && $1.type == $3.type )
                                   {
-                                    fprintf(yyout,"\n\tseq $t%d $t%d $t%d", size(variables)-1, size(variables)-1, size(variables));
-                                    pop(variables);
+                                    fprintf(yyout,"\n\tseq $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
+                                    pop(vars_temp_mips);
                                     $$.type = $1.type;
                                   }
                                   else
                                   {
                                     yyerror("Syntax error");
                                   }
-                                } 
+                                }
       | expr T_NE expr          {
                                   if (($1.type == int_val || $1.type == bool_val) && $1.type == $3.type )
                                   {
-                                    fprintf(yyout,"\n\tsne $t%d $t%d $t%d", size(variables)-1, size(variables)-1, size(variables));
-                                    pop(variables);
+                                    fprintf(yyout,"\n\tsne $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
+                                    pop(vars_temp_mips);
                                     $$.type = $1.type;
                                   }
                                   else
@@ -408,8 +394,8 @@ expr : cte                      {
       | expr T_AND expr         {
                                   if ($1.type == bool_val && $3.type == bool_val)
                                   {
-                                    fprintf(yyout,"\n\tand $t%d $t%d $t%d", size(variables)-1, size(variables)-1, size(variables));
-                                    pop(variables);
+                                    fprintf(yyout,"\n\tand $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
+                                    pop(vars_temp_mips);
                                     $$.type = bool_val;
                                   }
                                   else
@@ -417,12 +403,12 @@ expr : cte                      {
                                     yyerror("Syntax error");
                                   }
                                 }
-                                   
+
       | expr T_OR expr          {
                                   if ($1.type == bool_val && $3.type == bool_val)
                                   {
-                                    fprintf(yyout,"\n\tor $t%d $t%d $t%d", size(variables)-1, size(variables)-1, size(variables));
-                                    pop(variables);
+                                    fprintf(yyout,"\n\tor $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
+                                    pop(vars_temp_mips);
                                     $$.type = bool_val;
                                   }
                                   else
@@ -433,8 +419,8 @@ expr : cte                      {
       | expr T_XOR expr         {
                                   if ($1.type == bool_val && $3.type == bool_val)
                                   {
-                                    fprintf(yyout,"\n\txor $t%d $t%d $t%d", size(variables)-1, size(variables)-1, size(variables));
-                                    pop(variables);
+                                    fprintf(yyout,"\n\txor $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
+                                    pop(vars_temp_mips);
                                     $$.type = bool_val;
                                   }
                                   else
@@ -446,7 +432,7 @@ expr : cte                      {
 cte : T_INTEGER                 {$$.val = $1; $$.type = int_val;}
     | T_BOOLEAN                 {$$.val = $1; $$.type = bool_val;}
     | T_STRING                  {$$.val = $1; $$.type = string_val;};
-    
+
 %%
 
 void yyerror (char *s) {
@@ -457,7 +443,7 @@ void yyerror (char *s) {
 void init ()
 {
   contextes = newStack();
-  variables = newStack();
+  vars_temp_mips = newStack();
 }
 
 void insert_procedures ()
@@ -466,6 +452,14 @@ void insert_procedures ()
     fprintf(yyout, "\npow:\n\tmul $t8 $t8 $a2\n\tadd $t9 $t9 1\n\tbne $t9 $a3 pow\n\tjr $ra\n\t");
   }
 }
+
+/*void showVariable()
+{
+  for (i = 1; i < vars_count; i++){
+      // For each variable in the table, compare if it is the same as the input variable.
+      fprintf(stderr, "Var %s : %s\n", vars_array[i]->scalpavar, vars_array[i]->mipsvar);
+  }
+}*/
 
 int main(int argc, char* argv[])
 {
@@ -498,7 +492,9 @@ int main(int argc, char* argv[])
   yyparse();
 
   insert_procedures();
-  
+
+  //showVariable();
+
   fclose(yyin);
   fclose(yyout);
 

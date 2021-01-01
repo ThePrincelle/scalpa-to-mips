@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include "symbols_tab.h"
+#include "variables_tab.h"
 #include "pile.h"
 #include "parser.tab.h"
 %}
@@ -57,9 +58,9 @@ of                              { return T_OF; }
 true                            { yylval.string_val = "1"; return T_BOOLEAN; }
 false                           { yylval.string_val = "0"; return T_BOOLEAN; }
 
-[a-zA-Z]([0-9a-zA-Z]+|['_])     { yylval.string_val = strdup(yytext); return T_IDENT; }
+[a-zA-Z]([0-9a-zA-Z]+|['_])?    { yylval.string_val = strdup(yytext); return T_IDENT; }
 [0-9]+                          { yylval.string_val = strdup(yytext); return T_INTEGER; }
-[a-zA-Z]                        { yylval.string_val = strdup(yytext); return T_STRING; }
+\"[a-zA-Z]+\"                   { yylval.string_val = strdup(yytext); return T_STRING; }
 
 [[:blank:]]                     { /* ignorer les espaces */ }
 

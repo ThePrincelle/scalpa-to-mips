@@ -26,6 +26,7 @@
     int context;
     char* mipsvar;
     char* scalpavar;
+    int type;
   }variable;
   variable tab_var[100];
   int nextvar = 0;
@@ -151,9 +152,9 @@
 %right OPUMINUS T_NOT
 
  
-%type <string_val> prog_instr sequence program vardecllist varsdecl typename atomictype arraytype rangelist T_IDENT T_INTEGER T_BOOLEAN T_BEGIN T_STRING
+%type <string_val> prog_instr sequence program vardecllist varsdecl atomictype arraytype rangelist T_IDENT T_INTEGER T_BOOLEAN T_BEGIN T_STRING
 //%type <bool_val>
-//%type <int_val> 
+%type <int_val> typename
 %type <identlist_val> identlist
 %type <var> cte expr
 %%
@@ -165,7 +166,17 @@ vardecllist :
             | varsdecl                                              {}
             | varsdecl SEMICOLON vardecllist                        {};
 
-varsdecl : T_VAR identlist D_POINT typename                         {};
+varsdecl : T_VAR identlist D_POINT typename                         {
+                                                                      identliste* current_ident = $2;
+                                                                      while(current_ident != NULL)
+                                                                      {
+                                                                        char varmips[100];
+                                                                        snprintf(varmips,100,"$s%d",size(nextvar)); /** @TODO: Talle max des $s et on peux avoir $S6 dans deux fonction de meme niveau de context ici pas géré **/
+                                                                        addVar(current_ident->ident, varmips, size(contextes), $3);
+                                                                        current_ident = current_ident->suivant;
+                                                                      }
+                                                                      
+                                                                    };
 
 identlist : T_IDENT                                                 { 
                                                                       identliste* temp_ident = creIdentlist($1);

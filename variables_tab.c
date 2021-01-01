@@ -43,10 +43,9 @@ void vars_to_string(FILE *returns)
   int i;
   for (i = 0; i < vars_count; i++){
       // For each variable in the table, compare if it is the same as the input variable.
-      struct variable* act_val = vars_array[0];
-      fprintf(returns, "type: %d -- context: %d\n", act_val->type, act_val->context);
+      struct variable* act_val = vars_array[i];
+      fprintf(returns, "scalpavar: %s -- mipsvar: %d\n", act_val->scalpavar, act_val->mipsvar);
   }
-
 }
 
 /*
@@ -65,7 +64,6 @@ bool insertVar(char* varName, char* mipsvar, int context, int type, FILE *return
         return false;
       }
     }
-
 
     // If we add the variable in the table, update the variable_capacity
     if (vars_count >= vars_capacity) {

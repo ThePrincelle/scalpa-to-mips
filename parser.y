@@ -151,8 +151,14 @@ varsdecl : T_VAR identlist D_POINT typename                         {
                                                                       while(current_ident != NULL)
                                                                       {
                                                                         char varmips[100];
-                                                                        snprintf(varmips,100,"$s%d",vars_count); /** @TODO: Talle max des $s et on peux avoir $S6 dans deux fonction de meme niveau de context ici pas géré **/
-                                                                        bool inserted = insertVar(current_ident->ident, varmips, size(contextes), $4, stderr);
+                                                                        snprintf(varmips,100,"$s%d",vars_count);
+
+                                                                        /** @TODO: Talle max des $s **/
+
+                                                                        char varscalpa[100];
+                                                                        snprintf(varscalpa,100,"%s",current_ident->ident);
+
+                                                                        bool inserted = insertVar(varscalpa, varmips, size(contextes), $4, stderr);
 
                                                                         if(!inserted)
                                                                         {

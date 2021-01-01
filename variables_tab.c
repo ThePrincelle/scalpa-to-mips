@@ -1,7 +1,7 @@
 #include "variables_tab.h"
 
 int vars_count;
-int vars_capacity;
+int vars_capacity = 10;
 
 // Define the variable structure.
 struct variable {
@@ -13,22 +13,26 @@ struct variable {
 
 struct variable** vars_array;
 
+// Utility function to initialize vars_array
+void initVarArray()
+{
+    vars_array = malloc(vars_capacity*sizeof(struct variable*));
+}
+
 /*
   Function that simply returns the code of the variable given in the array of variables.
   If the variable does not exists, return NULL.
 */
 struct variable* getVar(char* varName, FILE *returns){
-    int i;
-    for (i = 1; i < vars_count; i++){
-        // For each variable in the table, compare if it is the same as the input variable.
-        fprintf(returns, "get_var i: %d\n", i);
-        fprintf(returns, "get_var vars_count: %d\n", vars_count);
-        if (strcmp(vars_array[i]->scalpavar, varName) == 0){
-            return vars_array[i]; // Return the position of the variable in the table
-        }
-    }
+  int i;
+  for (i = 0; i < vars_count; i++){
+      // For each variable in the table, compare if it is the same as the input variable.
+      if (strcmp(vars_array[i]->scalpavar, varName) == 0){
+          return vars_array[i]; // Return the position of the variable in the table
+      }
+  }
 
-    return NULL;
+  return NULL;
 }
 
 /*
@@ -37,17 +41,18 @@ struct variable* getVar(char* varName, FILE *returns){
 void vars_to_string(FILE *returns)
 {
   int i;
-  fprintf(returns, "vars_count: %d\n", vars_count);
-  struct variable* act_val = vars_array[2];
-  fprintf(returns, "type: %d -- context: %d\n", act_val->type, act_val->context);
+  for (i = 0; i < vars_count; i++){
+      // For each variable in the table, compare if it is the same as the input variable.
+      struct variable* act_val = vars_array[0];
+      fprintf(returns, "type: %d -- context: %d\n", act_val->type, act_val->context);
+  }
+
 }
 
 /*
   Function that returns the result of the insertion in the vars_array.
 */
 bool insertVar(char* varName, char* mipsvar, int context, int type, FILE *returns){
-    int i;
-
     // Retrieve the variable position in the table.
     struct variable* old_var = getVar(varName, returns);
 
@@ -60,6 +65,7 @@ bool insertVar(char* varName, char* mipsvar, int context, int type, FILE *return
         return false;
       }
     }
+
 
     // If we add the variable in the table, update the variable_capacity
     if (vars_count >= vars_capacity) {
@@ -80,8 +86,6 @@ bool insertVar(char* varName, char* mipsvar, int context, int type, FILE *return
     new_var->mipsvar = mipsvar_txt;
     new_var->context = context;
     new_var->type = type;
-
-    fprintf(returns, "vars_array[%d]: type: %d -- context: %d\n", vars_count, new_var->type, new_var->context);
 
     vars_array[vars_count] = new_var;
     vars_count++;

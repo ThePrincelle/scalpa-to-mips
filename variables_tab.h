@@ -14,6 +14,9 @@ struct variable;
 
 struct variable** vars_array;
 
+// Utility function to initialize vars_array
+void initVarArray();
+
 /*
   Function that returns the saved variables in a given char address.
 */

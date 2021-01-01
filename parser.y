@@ -441,6 +441,7 @@ void init ()
 {
   contextes = newStack();
   vars_temp_mips = newStack();
+  initVarArray();
 }
 
 void insert_procedures ()

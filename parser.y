@@ -11,7 +11,7 @@
   extern int yylex();
   extern FILE *yyin;
   extern FILE *yyout;
-  enum type {int_val, bool_val, string_val};
+  enum type {int_val, bool_val, string_val, unit_val};
   enum op_unaire {opu_minus, opu_not};
   enum op_arith {opb_plus, opb_minus, opb_mult, opb_div, opb_pow, opb_le, opb_lt, opb_ge, opb_gt, opb_eq, opb_ne, opb_and, opb_or, opb_xor};
 
@@ -152,9 +152,9 @@
 %right OPUMINUS T_NOT
 
  
-%type <string_val> prog_instr sequence program vardecllist varsdecl atomictype arraytype rangelist T_IDENT T_INTEGER T_BOOLEAN T_BEGIN T_STRING
+%type <string_val> prog_instr sequence program vardecllist varsdecl arraytype rangelist T_IDENT T_INTEGER T_BOOLEAN T_BEGIN T_STRING
 //%type <bool_val>
-%type <int_val> typename
+%type <int_val> typename atomictype
 %type <identlist_val> identlist
 %type <var> cte expr
 %%
@@ -172,7 +172,7 @@ varsdecl : T_VAR identlist D_POINT typename                         {
                                                                       {
                                                                         char varmips[100];
                                                                         snprintf(varmips,100,"$s%d",size(nextvar)); /** @TODO: Talle max des $s et on peux avoir $S6 dans deux fonction de meme niveau de context ici pas géré **/
-                                                                        addVar(current_ident->ident, varmips, size(contextes), $3);
+                                                                        addVar(current_ident->ident, varmips, size(contextes), $4);
                                                                         current_ident = current_ident->suivant;
                                                                       }
                                                                       
@@ -180,20 +180,20 @@ varsdecl : T_VAR identlist D_POINT typename                         {
 
 identlist : T_IDENT                                                 { 
                                                                       identliste* temp_ident = creIdentlist($1);
-                                                                      $$ == temp_ident;
+                                                                      $$ = temp_ident;
                                                                     }
           | T_IDENT COMMA identlist                                 {
                                                                       identliste* temp_ident = creIdentlist($1);
                                                                       indentliste* concact_ident = concactIdentlist(temp_ident, $3);
-                                                                      $$ == concact_ident;
+                                                                      $$ = concact_ident;
                                                                     };
 
-typename : atomictype                                               {}
-         | arraytype                                                {};
+typename : atomictype                                               {$$ = $1}
+         //| arraytype                                                {};
 
-atomictype : T_UNIT                                                 {}
-           | T_BOOL                                                 {}
-           | T_INT                                                  {}
+atomictype : T_UNIT                                                 {$$ = unit_val }
+           | T_BOOL                                                 {$$ = bool_val}
+           | T_INT                                                  {$$ = int_val}
 
 arraytype : T_ARRAY T_BRAOUV rangelist T_BRAFER T_OF atomictype     {}
 rangelist : T_INTEGER PP T_INTEGER                                  {}

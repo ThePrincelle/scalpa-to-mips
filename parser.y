@@ -89,7 +89,7 @@
 %start program
 
 //Main
-%token T_PROGRAM T_IDENT T_RETURN T_WRITE T_INTEGER T_BOOLEAN T_BEGIN T_END T_STRING T_PAROUV T_PARFER SEMICOLON 
+%token T_PROGRAM T_IDENT T_RETURN T_WRITE T_INTEGER T_BOOLEAN T_BEGIN T_END T_STRING T_PAROUV T_PARFER T_VAR T_BRAOUV T_BRAFER SEMICOLON D_POINT COMMA
 
 // Operators
 %token T_MINUS T_PLUS T_MULT T_POW
@@ -97,20 +97,43 @@
 // Comparators
 %token T_NOT T_LE T_GE T_NE T_LT T_GT T_EQ T_AND T_OR T_XOR
 
+<%
+
 %nonassoc T_LE T_GE T_NE T_LT T_GT T_EQ
 %left T_PLUS T_MINUS T_OR T_XOR
 %left T_DIV T_MULT T_AND
 %right T_POW
 %right OPUMINUS T_NOT
 
-
-%type <string_val> prog_instr sequence program T_IDENT T_INTEGER T_BOOLEAN T_BEGIN T_STRING
+ 
+%type <string_val> prog_instr sequence program identlist vardecllist varsdecl typename atomictype arraytype rangelist T_IDENT T_INTEGER T_BOOLEAN T_BEGIN T_STRING
 //%type <bool_val>
 //%type <int_val> 
 %type <var> cte expr
 %%
 
 program : T_PROGRAM T_IDENT  {fprintf(yyout,"\t.text\n#\t%s\nmain:",$2);} prog_instr {fprintf(yyout,"\n\tli $v0 10\n\tsyscall");};
+
+vardecllist : 
+            |                                                       {}
+            | varsdecl                                              {}
+            | varsdecl SEMICOLON vardecllist                        {};
+
+varsdecl : T_VAR D_POINT identlist D_POINT typename                 {};
+
+identlist : T_IDENT                                                 {}
+          | T_IDENT COMMA identlist                                 {};
+
+typename : atomictype                                               {}
+         | arraytype                                                {};
+
+atomictype : T_UNIT                                                 {}
+           | T_BOOL                                                 {}
+           | T_INT                                                  {}
+
+arraytype : T_ARRAY T_BRAOUV rangelist T_BRAFER T_OF atomictype     {}
+rangelist : T_INTEGER PP T_INTEGER                                  {}
+          | T_INTEGER PP T_INTEGER COMMA rangelist                  {}
 
 prog_instr : T_RETURN               {}
            | T_RETURN expr          {}

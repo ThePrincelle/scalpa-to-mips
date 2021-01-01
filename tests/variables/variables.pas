@@ -1,3 +1,6 @@
 program mainOnly
   var i, j, max : int
-  write i
+  begin
+    i := 2;
+    write i
+  end

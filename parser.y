@@ -23,20 +23,20 @@
   int nextquad = 0;
 
 
-  struct identliste{
+  typedef struct identliste{
       char* ident;
       struct identliste* suivant;
-  };
+  }identliste;
 
-  struct identliste* creIdentlist(char* ident) { /** permet l'insertion d'une nouvelle instruction dans la liste de lecture du code **/
-    struct identliste* new = malloc(sizeof(struct identliste*));
+  identliste* creIdentlist(char* ident) { /** permet l'insertion d'une nouvelle instruction dans la liste de lecture du code **/
+    identliste* new = malloc(sizeof(struct identliste*));
     new->ident = ident;
     new->suivant = NULL;
     return new;
   }
 
-  struct identliste* concatIdentlist(struct identliste* l1, struct identliste* l2) { /** permet l'insertion d'une instruction dans une liste de lecture du code **/
-    struct identliste* res;
+  identliste* concatIdentlist(identliste* l1, identliste* l2) { /** permet l'insertion d'une instruction dans une liste de lecture du code **/
+    identliste* res;
     if (l1 != NULL) res = l1;
     else if (l2 != NULL) res = l2;
          else res = NULL;
@@ -107,6 +107,7 @@
   int bool_val;
   int int_val;
   char* string_val;
+  variable* variable_val;
   struct
   {
     char* val;
@@ -117,7 +118,7 @@
 %start program
 
 //Main
-%token T_PROGRAM T_IDENT T_RETURN T_WRITE T_INTEGER T_BOOLEAN T_BEGIN T_END T_STRING T_PAROUV T_PARFER T_VAR T_BRAOUV T_BRAFER SEMICOLON D_POINT COMMA T_UNIT T_ARRAY T_INT T_BOOL T_OF PP
+%token T_PROGRAM T_IDENT T_RETURN T_WRITE T_INTEGER T_BOOLEAN T_BEGIN T_END T_STRING T_PAROUV T_PARFER T_VAR T_BRAOUV T_BRAFER SEMICOLON D_POINT COMMA T_UNIT T_ARRAY T_INT T_BOOL T_OF PP ASSIGN
 
 // Operators
 %token T_MINUS T_PLUS T_MULT T_POW
@@ -134,35 +135,31 @@
 
 %type <string_val> prog_instr sequence program varsdecl T_IDENT T_INTEGER T_BOOLEAN T_BEGIN T_STRING
 //%type <bool_val>
-%type <int_val> typename atomictype
+%type <int_val> typename atomictype 
 %type <identlist_val> identlist
+%type <variable_val> lvalue
 %type <var> cte expr
 
 %%
 
-program : T_PROGRAM T_IDENT  {fprintf(yyout,"\t.text\n#\t%s\nmain:",$2);} vardecllist prog_instr {fprintf(yyout,"\n\tli $v0 10\n\tsyscall");};
+program : T_PROGRAM T_IDENT  {fprintf(yyout,"\t.text\n#\t%s\nmain:",$2);} vardecllist{fprintf(yyout,"\n\taddi $sp, $sp, %d",-4*vars_count);} prog_instr {fprintf(yyout,"\n\tli $v0 10\n\tsyscall");};
 
 vardecllist : varsdecl                                              {}
             | varsdecl SEMICOLON vardecllist                        {}
             |                                                       {};
 
 varsdecl : T_VAR identlist D_POINT typename                         {
-                                                                      struct identliste* current_ident = $2;
+                                                                      identliste* current_ident = $2;
                                                                       while(current_ident != NULL)
                                                                       {
-                                                                        char varmips[100];
-                                                                        snprintf(varmips,100,"$s%d",vars_count);
-
-                                                                        /** @TODO: Talle max des $s **/
-
                                                                         char varscalpa[100];
                                                                         snprintf(varscalpa,100,"%s",current_ident->ident);
 
-                                                                        bool inserted = insertVar(varscalpa, varmips, size(contextes), $4);
-
+                                                                        bool inserted = insertVar(varscalpa, size(contextes), $4);
+                                                                        
                                                                         if(!inserted)
                                                                         {
-                                                                          yyerror("Syntax error");
+                                                                          yyerror("Syntax error (inserted)");
                                                                         }
 
                                                                         current_ident = current_ident->suivant;
@@ -171,12 +168,12 @@ varsdecl : T_VAR identlist D_POINT typename                         {
                                                                     };
 
 identlist : T_IDENT                                                 {
-                                                                      struct identliste* temp_ident = creIdentlist($1);
+                                                                      identliste* temp_ident = creIdentlist($1);
                                                                       $$ = temp_ident;
                                                                     }
           | T_IDENT COMMA identlist                                 {
-                                                                      struct identliste* temp_ident = creIdentlist($1);
-                                                                      struct identliste* concact_ident = concatIdentlist(temp_ident, $3);
+                                                                      identliste* temp_ident = creIdentlist($1);
+                                                                      identliste* concact_ident = concatIdentlist(temp_ident, $3);
                                                                       $$ = concact_ident;
                                                                     };
 
@@ -205,14 +202,44 @@ prog_instr : T_RETURN               {}
                                       fprintf(yyout,"\n\tmove $a0 $t%d\n\tli $v0 4\n\tsyscall", size(vars_temp_mips));
                                      }
                                     };
+           | lvalue ASSIGN expr   {
+                                    if($3.type != (int)$1->type)
+                                    {
+                                      yyerror("Syntax error (type)");
+                                    }
+
+                                    $1->init = true;
+
+                                     
+                                    fprintf(yyout,"\n\tsw $t%d %d($sp)", size(vars_temp_mips), $1->p_memoire);
+                                    pop(vars_temp_mips);
+                                  }
 
 sequence : prog_instr SEMICOLON sequence {
 
-                                          }
+                                         }
          | prog_instr SEMICOLON          {
 
                                           }
          | prog_instr                     { $$ = $1 ;};
+
+lvalue : T_IDENT                {
+                                  struct variable* var = getVar($1);
+
+                                  if (var == NULL )
+                                  {
+                                    yyerror("Syntax error (null ou init)");
+                                  }
+
+                                  if ((int)var->context > size(contextes))
+                                  {
+                                    yyerror("Syntax error (context)");
+                                  }
+                                  
+
+                                  $$ = var; 
+                                }
+       //| ident [ exprlist ]
 
 expr : cte                      {
                                   if ($1.type == int_val || $1.type == bool_val)
@@ -239,12 +266,10 @@ expr : cte                      {
                                     }
                                     else
                                     {
-                                      yyerror("Syntax error");
+                                      yyerror("Syntax error (type)");
                                     }
                                 }%prec OPUMINUS
       | T_NOT expr              {
-
-
                                   if($2.type == bool_val )
                                   {
                                     fprintf(yyout,"\n\tseq $t%d $t%d $zero\n\tmove $a0 $t6", size(vars_temp_mips), size(vars_temp_mips));
@@ -252,9 +277,8 @@ expr : cte                      {
                                   }
                                   else
                                   {
-                                    yyerror("Syntax error");
+                                    yyerror("Syntax error (type)");
                                   }
-
                                 }
       | expr T_PLUS expr           {
 
@@ -266,7 +290,7 @@ expr : cte                      {
                                     }
                                     else
                                     {
-                                      yyerror("Syntax error");
+                                      yyerror("Syntax error (type)");
                                     }
                                   }
       | expr T_MINUS expr         {
@@ -278,7 +302,7 @@ expr : cte                      {
                                     }
                                     else
                                     {
-                                      yyerror("Syntax error");
+                                      yyerror("Syntax error (type)");
                                     }
                                   }
     | expr T_MULT expr            {
@@ -290,7 +314,7 @@ expr : cte                      {
                                       }
                                       else
                                       {
-                                        yyerror("Syntax error");
+                                        yyerror("Syntax error (type)");
                                       }
                                   }
     | expr T_DIV expr            {
@@ -302,7 +326,7 @@ expr : cte                      {
                                       }
                                       else
                                       {
-                                        yyerror("Syntax error");
+                                        yyerror("Syntax error (type)");
                                       }
                                   }
     | expr T_POW expr             {
@@ -319,7 +343,7 @@ expr : cte                      {
                                     }
                                     else
                                     {
-                                      yyerror("Syntax error");
+                                      yyerror("Syntax error (type)");
                                     }
                                  }
     | expr T_LE expr             {
@@ -331,7 +355,7 @@ expr : cte                      {
                                     }
                                     else
                                     {
-                                      yyerror("Syntax error");
+                                      yyerror("Syntax error (type)");
                                     }
                                  }
       | expr T_LT expr           {
@@ -342,8 +366,8 @@ expr : cte                      {
                                       $$.type = bool_val;
                                     }
                                     else
-                                    {
-                                      yyerror("Syntax error");
+                                    { 
+                                      yyerror("Syntax error (type)");
                                     }
                                  }
       | expr T_GE expr           {
@@ -355,7 +379,7 @@ expr : cte                      {
                                     }
                                     else
                                     {
-                                      yyerror("Syntax error");
+                                      yyerror("Syntax error (type)");
                                     }
                                  }
       | expr T_GT expr           {
@@ -367,7 +391,7 @@ expr : cte                      {
                                     }
                                     else
                                     {
-                                      yyerror("Syntax error");
+                                      yyerror("Syntax error (type)");
                                     }
                                  }
       | expr T_EQ expr           {
@@ -379,7 +403,7 @@ expr : cte                      {
                                   }
                                   else
                                   {
-                                    yyerror("Syntax error");
+                                    yyerror("Syntax error (type)");
                                   }
                                 }
       | expr T_NE expr          {
@@ -391,7 +415,7 @@ expr : cte                      {
                                   }
                                   else
                                   {
-                                    yyerror("Syntax error");
+                                    yyerror("Syntax error (type)");
                                   }
                                 }
       | expr T_AND expr         {
@@ -403,7 +427,7 @@ expr : cte                      {
                                   }
                                   else
                                   {
-                                    yyerror("Syntax error");
+                                    yyerror("Syntax error (type)");
                                   }
                                 }
 
@@ -416,7 +440,7 @@ expr : cte                      {
                                   }
                                   else
                                   {
-                                    yyerror("Syntax error");
+                                    yyerror("Syntax error (type)");
                                   }
                                 }
       | expr T_XOR expr         {
@@ -428,7 +452,7 @@ expr : cte                      {
                                   }
                                   else
                                   {
-                                    yyerror("Syntax error");
+                                    yyerror("Syntax error (type)");
                                   }
                                 }
       | T_IDENT                 {
@@ -436,18 +460,18 @@ expr : cte                      {
 
                                   if (var == NULL || !var->init )
                                   {
-                                    yyerror("Syntax error");
+                                    yyerror("Syntax error (NULL ou init)");
                                   }
 
                                   if ((int)var->context > size(contextes))
                                   {
-                                    yyerror("Syntax error");
+                                    yyerror("Syntax error (context)");
                                   }
-
                                   push(vars_temp_mips, size(contextes));
-                                  fprintf(yyout,"\n\tmove $t%d %s",size(vars_temp_mips) ,var->mipsvar);
-
+                                  fprintf(yyout,"\n\tlw $t%d %d($sp)", size(vars_temp_mips),var->p_memoire);
                                 }
+
+      //| T_IDENT [ exprlist ]
 
 cte : T_INTEGER                 {$$.val = $1; $$.type = int_val;}
     | T_BOOLEAN                 {$$.val = $1; $$.type = bool_val;}
@@ -456,7 +480,7 @@ cte : T_INTEGER                 {$$.val = $1; $$.type = int_val;}
 %%
 
 void yyerror (char *s) {
-  fprintf(stderr, "[Yacc] error: %s\n", s);
+  fprintf(stderr, "[Yacc] error H: %s\n", s);
   exit(1);
 }
 

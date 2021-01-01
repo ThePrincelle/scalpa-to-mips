@@ -12,7 +12,7 @@ int vars_capacity;
 // Define the variable structure.
 typedef struct variable {
   int context;
-  char* mipsvar;
+  int p_memoire;
   char* scalpavar;
   int type;
   bool init;
@@ -36,5 +36,5 @@ variable* getVar(char* varName);
 /*
   Function that returns the result of the insertion in the vars_array.
 */
-bool insertVar(char* varName, char* mipsvar, int context, int type);
+bool insertVar(char* varName, int context, int type);
 #endif

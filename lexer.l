@@ -35,6 +35,7 @@
 \<                              { return T_LT; }
 \>                              { return T_GT; }
 \=                              { return T_EQ; }
+":="                            { return ASSIGN; }
 
 "and"                           { return T_AND; }
 "or"                            { return T_OR;  }

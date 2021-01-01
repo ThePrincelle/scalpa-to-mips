@@ -36,7 +36,7 @@ void vars_to_string(FILE *returns)
   for (i = 0; i < vars_count; i++){
       // For each variable in the table, compare if it is the same as the input variable.
       variable* act_val = vars_array[i];
-      fprintf(returns, "scalpavar: %s -- mipsvar: %s\n", act_val->scalpavar, act_val->mipsvar);
+      fprintf(returns, "scalpavar: %s -- mipsvar: %d($sp)\n", act_val->scalpavar, act_val->p_memoire);
   }
 
 }
@@ -44,7 +44,7 @@ void vars_to_string(FILE *returns)
 /*
   Function that returns the result of the insertion in the vars_array.
 */
-bool insertVar(char* varName, char* mipsvar, int context, int type){
+bool insertVar(char* varName, int context, int type){
     // Retrieve the variable position in the table.
     variable* old_var = getVar(varName);
 
@@ -66,10 +66,10 @@ bool insertVar(char* varName, char* mipsvar, int context, int type){
 
     variable* new_var = malloc(sizeof(variable*));
     new_var->scalpavar = strdup(varName);
-    new_var->mipsvar = strdup(mipsvar);
     new_var->context = context;
     new_var->type = type;
     new_var->init = false;
+    new_var->p_memoire = 4 * (vars_count);
 
 
     vars_array[vars_count] = new_var;

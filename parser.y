@@ -151,7 +151,7 @@
 %right OPUMINUS T_NOT
 
  
-%type <string_val> prog_instr sequence program identlist vardecllist varsdecl typename atomictype arraytype rangelist T_IDENT T_INTEGER T_BOOLEAN T_BEGIN T_STRING
+%type <string_val> prog_instr sequence program vardecllist varsdecl typename atomictype arraytype rangelist T_IDENT T_INTEGER T_BOOLEAN T_BEGIN T_STRING
 //%type <bool_val>
 //%type <int_val> 
 %type <identlist_val> identlist
@@ -168,12 +168,12 @@ vardecllist :
 varsdecl : T_VAR identlist D_POINT typename                         {};
 
 identlist : T_IDENT                                                 { 
-                                                                      identliste* temp_ident = creIdentlist($1)
+                                                                      identliste* temp_ident = creIdentlist($1);
                                                                       $$ == temp_ident;
                                                                     }
           | T_IDENT COMMA identlist                                 {
-                                                                      identliste* temp_ident = creIdentlist($1)
-                                                                      indentliste* concact_ident = concactIdentlist(temp_ident, $3)
+                                                                      identliste* temp_ident = creIdentlist($1);
+                                                                      indentliste* concact_ident = concactIdentlist(temp_ident, $3);
                                                                       $$ == concact_ident;
                                                                     };
 

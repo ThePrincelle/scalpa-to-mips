@@ -72,31 +72,11 @@ bool insertVar(char* varName, char* mipsvar, int context, int type, FILE *return
         vars_array = (struct variable**)realloc(vars_array, vars_capacity * sizeof(struct variable*));
     }
 
-    // Add variable to the array and increment the variable_count.
-    char* scalpavar_txt = (char*)malloc(strlen(varName));
-    strncpy(scalpavar_txt, varName, strlen(varName) + 1);
-
-    fprintf(stderr, "scalpavar: %s\n", scalpavar_txt);
-
-    // Add variable to the array and increment the variable_count.
-    char* mipsvar_txt = (char*)malloc(strlen(mipsvar));
-    strncpy(mipsvar_txt, mipsvar, strlen(mipsvar) + 1);
-
     struct variable* new_var = malloc(sizeof(struct variable*));
-    new_var->scalpavar = strdup(scalpavar_txt);
-    new_var->mipsvar = strdup(mipsvar_txt);
+    new_var->scalpavar = strdup(varName);
+    new_var->mipsvar = strdup(mipsvar);
     new_var->context = context;
     new_var->type = type;
-
-    fprintf(stderr, "new_var scalpavar: %s\n", new_var->scalpavar);
-    fprintf(stderr, "new_var mipsvar: %s\n", new_var->mipsvar);
-
-    // struct variable new_var;
-    //
-    // strcpy(new_var.scalpavar, scalpavar_txt);
-    // strcpy(new_var.mipsvar, mipsvar_txt);
-    // new_var.context = context;
-    // new_var.type = type;
 
     vars_array[vars_count] = new_var;
     vars_count++;

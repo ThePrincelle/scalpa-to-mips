@@ -76,7 +76,7 @@ bool insertVar(char* varName, char* mipsvar, int context, int type, FILE *return
     char* scalpavar_txt = (char*)malloc(strlen(varName));
     strncpy(scalpavar_txt, varName, strlen(varName) + 1);
 
-    fprintf(stderr, "scalpavar: %s\n", scalpavar_txt)
+    fprintf(stderr, "scalpavar: %s\n", scalpavar_txt);
 
     // Add variable to the array and increment the variable_count.
     char* mipsvar_txt = (char*)malloc(strlen(mipsvar));

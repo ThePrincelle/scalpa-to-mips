@@ -83,10 +83,13 @@ bool insertVar(char* varName, char* mipsvar, int context, int type, FILE *return
     strncpy(mipsvar_txt, mipsvar, strlen(mipsvar) + 1);
 
     struct variable* new_var = malloc(sizeof(struct variable*));
-    new_var->scalpavar = scalpavar_txt;
-    new_var->mipsvar = mipsvar_txt;
+    new_var->scalpavar = strdup(scalpavar_txt);
+    new_var->mipsvar = strdup(mipsvar_txt);
     new_var->context = context;
     new_var->type = type;
+
+    fprintf(stderr, "new_var scalpavar: %s\n", new_var->scalpavar);
+    fprintf(stderr, "new_var mipsvar: %s\n", new_var->mipsvar);
 
     // struct variable new_var;
     //

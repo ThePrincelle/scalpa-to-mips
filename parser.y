@@ -182,12 +182,12 @@ identlist : T_IDENT                                                 {
                                                                       $$ = concact_ident;
                                                                     };
 
-typename : atomictype                                               {$$ = $1}
+typename : atomictype                                               {$$ = $1;}
          //| arraytype                                                {};
 
-atomictype : T_UNIT                                                 {$$ = unit_val }
-           | T_BOOL                                                 {$$ = bool_val}
-           | T_INT                                                  {$$ = int_val}
+atomictype : T_UNIT                                                 {$$ = unit_val;}
+           | T_BOOL                                                 {$$ = bool_val;}
+           | T_INT                                                  {$$ = int_val;}
 
 /*arraytype : T_ARRAY T_BRAOUV rangelist T_BRAFER T_OF atomictype     {}
 rangelist : T_INTEGER PP T_INTEGER                                  {}

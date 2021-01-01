@@ -158,7 +158,7 @@ varsdecl : T_VAR identlist D_POINT typename                         {
                                                                         char varscalpa[100];
                                                                         snprintf(varscalpa,100,"%s",current_ident->ident);
 
-                                                                        bool inserted = insertVar(varscalpa, varmips, size(contextes), $4, stderr);
+                                                                        bool inserted = insertVar(varscalpa, varmips, size(contextes), $4);
 
                                                                         if(!inserted)
                                                                         {
@@ -194,7 +194,7 @@ rangelist : T_INTEGER PP T_INTEGER                                  {}
 prog_instr : T_RETURN               {}
            | T_RETURN expr          {}
            | T_BEGIN {push(contextes, 0);} sequence T_END {$$ = $1; pop(contextes);}
-         | T_BEGIN T_END          { /**delete all var inner current context**/}
+           | T_BEGIN T_END          { /**delete all var inner current context**/}
            | T_WRITE expr           {
                                      if ($2.type == int_val || $2.type == bool_val)
                                      {
@@ -430,7 +430,24 @@ expr : cte                      {
                                   {
                                     yyerror("Syntax error");
                                   }
-                                };
+                                }
+      | T_IDENT                 {
+                                  struct variable* var = getVar($1);
+
+                                  if (var == NULL || !var->init )
+                                  {
+                                    yyerror("Syntax error");
+                                  }
+
+                                  if ((int)var->context > size(contextes))
+                                  {
+                                    yyerror("Syntax error");
+                                  }
+
+                                  push(vars_temp_mips, size(contextes));
+                                  fprintf(yyout,"\n\tmove $t%d %s",size(vars_temp_mips) ,var->mipsvar);
+
+                                }
 
 cte : T_INTEGER                 {$$.val = $1; $$.type = int_val;}
     | T_BOOLEAN                 {$$.val = $1; $$.type = bool_val;}

@@ -10,9 +10,14 @@ int vars_count;
 int vars_capacity;
 
 // Define the variable structure.
-struct variable;
+typedef struct variable {
+  int context;
+  char* mipsvar;
+  char* scalpavar;
+  int type;
+  bool init;
+}variable;
 
-struct variable** vars_array;
 
 // Utility function to initialize vars_array
 void initVarArray();
@@ -26,10 +31,10 @@ void vars_to_string(FILE *returns);
   Function that simply returns the code of the variable given in the array of variables.
   If the variable does not exists, return NULL.
 */
-struct variable* getVar(char* varName, FILE *returns);
+variable* getVar(char* varName);
 
 /*
   Function that returns the result of the insertion in the vars_array.
 */
-bool insertVar(char* varName, char* mipsvar, int context, int type, FILE *returns);
+bool insertVar(char* varName, char* mipsvar, int context, int type);
 #endif

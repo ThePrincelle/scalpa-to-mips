@@ -158,6 +158,8 @@ varsdecl : T_VAR identlist D_POINT typename                         {
                                                                         char varscalpa[100];
                                                                         snprintf(varscalpa,100,"%s",current_ident->ident);
 
+                                                                        fprintf(stderr, "scalpavar yacc : %s\n", current_ident->ident);
+
                                                                         bool inserted = insertVar(varscalpa, varmips, size(contextes), $4, stderr);
 
                                                                         if(!inserted)

@@ -27,7 +27,7 @@ void insertSymbol(char* name, int type){
   int i;
   for (i = 0; i < symbols_count; i++){
       // For each symbol in the table, compare if it is the same as the input symbol.
-      if (strcmp(symbols_array[i]->name, name) == 0){
+      if (strcmp(symbols_array[i]->name, name) == 0 && symbols_array[i]->type == type){
         break; // Return the position of the symbol in the table
       }
   }

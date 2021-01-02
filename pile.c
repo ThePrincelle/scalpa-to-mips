@@ -28,6 +28,11 @@ int size(struct stack *pt)
     return pt->top + 1;
 }
 
+// Utility function to return the current index of the stack
+int curr_idx(struct stack *pt) { 
+    return pt->top;
+}
+
 // Utility function to check if the stack is empty or not
 int isEmpty(struct stack *pt)
 {

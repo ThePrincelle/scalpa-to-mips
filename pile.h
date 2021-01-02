@@ -13,6 +13,9 @@ struct stack* newStack();
 // Utility function to return the size of the stack
 int size(struct stack *pt);
 
+// Utility function to return the current index of the stack
+int curr_idx(struct stack *pt);
+
 // Utility function to check if the stack is full or not
 int isFull(struct stack *pt);
  

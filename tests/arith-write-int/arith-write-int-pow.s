@@ -1,8 +1,9 @@
+.data
+	errorMessage:	.asciiz	"Error Syntax run time"
 	.text
 #	mainOnly
 main:
 
-	addi $sp, $sp, 0
 	li $t1 2
 	li $t2 4
 	move $a2 $t1
@@ -13,6 +14,7 @@ main:
 	move $a0 $t1
 	li $v0 1
 	syscall
+end:
 	li $v0 10
 	syscall
 pow:
@@ -21,3 +23,10 @@ pow:
 	bne $t9 $a3 pow
 	jr $ra
 	
+
+error:
+	la $a0 errorMessage
+	li $v0 4
+	syscall
+	li $v0 10
+	syscall

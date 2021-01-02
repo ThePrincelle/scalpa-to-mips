@@ -1,6 +1,6 @@
 #include "variables_tab.h"
 
-int vars_count;
+int vars_count=0;
 int vars_capacity = 10;
 int nextPos=0;
 

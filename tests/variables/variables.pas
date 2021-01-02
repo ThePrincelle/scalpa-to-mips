@@ -3,7 +3,7 @@ program mainOnly
   var t : bool
   begin
     max := 10;
-    t   := true;
+    t := true;
     j := 8;
     i := 2;
     write i;

@@ -3,6 +3,7 @@
 
 int arrays_count;
 int arrays_capacity = 10;
+int arrays_vars = 0;
 
 varArray** arrays_array;
 
@@ -75,7 +76,7 @@ varArray* insertArray(char* varName, int context, arraytype_type* arraytype, FIL
 {
     int type = arraytype->type;
     rangelist_type* rangelist = arraytype->rangelist;
-    int dim = 1;
+    int dim = 0;
     int nbvars = 1;
 
     // If we add the variable in the table, update the variable_capacity
@@ -103,6 +104,8 @@ varArray* insertArray(char* varName, int context, arraytype_type* arraytype, FIL
 
     arrays_array[arrays_count] = new_array;
     arrays_count++;
+    arrays_vars += nbvars;
+    
 
     // Variable successfully added. Return true then.
     return new_array;

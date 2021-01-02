@@ -9,6 +9,7 @@
 
 int arrays_count;
 int arrays_capacity;
+int arrays_vars;
 
 typedef struct rangelist_type{
     int deb;

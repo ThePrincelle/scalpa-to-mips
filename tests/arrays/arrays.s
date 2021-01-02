@@ -33,6 +33,7 @@ main:
 
 	li $t2 4
 	add $t2 $t2 $t5
+	mul $t2 $t2   4
 	add $t2, $sp, $t2
 	sw $t1 0($t2)
 
@@ -56,6 +57,7 @@ main:
 
 	li $t1 4
 	add $t2 $t1 $t4
+	mul $t2 $t2   4
 	add $t2, $sp, $t2
 	lw $t1 0($t2)
 	move $a0 $t1

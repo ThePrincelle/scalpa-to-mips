@@ -19,11 +19,14 @@ main:
 	li $t3 -4
 	blt $t2 $t3 error
 	sub $t2 $t2 $t3
+	mul $t4 $t2 1
+
 
 	li $t2 4
-	add $t3 $t2 $t3
-	add $t3, $sp, $t3
-	sw $t1 0($t3)
+	add $t2 $t2 $t4
+	mul $t2 $t2   4
+	add $t2, $sp, $t2
+	sw $t1 0($t2)
 
 	li $t1 -3
 	li $t2 -3
@@ -31,9 +34,12 @@ main:
 	li $t2 -4
 	blt $t1 $t2 error
 	sub $t2 $t1 $t2
+	mul $t3 $t1 1
+
 
 	li $t1 4
-	add $t2 $t1 $t2
+	add $t2 $t1 $t3
+	mul $t2 $t2   4
 	add $t2, $sp, $t2
 	lw $t1 0($t2)
 	move $a0 $t1

@@ -437,6 +437,7 @@ prog_instr : T_RETURN               {}
                                                               push(vars_temp_mips, size(contextes));
                                                               fprintf(yyout,"\n\tli $t%d %d",size(vars_temp_mips)-lec_temp, p_memoire);
                                                               fprintf(yyout,"\n\tadd $t%d $t%d $t%d", size(vars_temp_mips)-lec_temp, size(vars_temp_mips)-lec_temp,size(vars_temp_mips));
+                                                              fprintf(yyout,"\n\tmul $t%d $t%d   4", size(vars_temp_mips)-lec_temp, size(vars_temp_mips)-lec_temp);
                                                               fprintf(yyout,"\n\tadd $t%d, $sp, $t%d", size(vars_temp_mips)-lec_temp, size(vars_temp_mips)-lec_temp);
                                                               fprintf(yyout,"\n\tsw $t%d 0($t%d)", size(vars_temp_mips)-lec_temp-1, size(vars_temp_mips)-lec_temp);
                                                               pop(vars_temp_mips);
@@ -794,6 +795,7 @@ expr : cte                      {
                                               push(vars_temp_mips, size(contextes));
                                               fprintf(yyout,"\n\tli $t%d %d",size(vars_temp_mips)-lec_temp, p_memoire);
                                               fprintf(yyout,"\n\tadd $t%d $t%d $t%d", size(vars_temp_mips)-lec_temp+1, size(vars_temp_mips)-lec_temp,size(vars_temp_mips));
+                                              fprintf(yyout,"\n\tmul $t%d $t%d   4", size(vars_temp_mips)-lec_temp+1, size(vars_temp_mips)-lec_temp+1);
                                               fprintf(yyout,"\n\tadd $t%d, $sp, $t%d", size(vars_temp_mips)-lec_temp+1, size(vars_temp_mips)-lec_temp+1);
                                               fprintf(yyout,"\n\tlw $t%d 0($t%d)", size(vars_temp_mips)-lec_temp, size(vars_temp_mips)-lec_temp+1);
 

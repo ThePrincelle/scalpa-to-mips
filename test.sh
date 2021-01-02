@@ -41,8 +41,9 @@ do
     # Run compiler on file
     echo "  🔄  Running Scalpa to MIPS compiler on: ${testfile_mips}"
     echo ""
-
-    if ./scalpa "${testfile}" ; then
+    echo -e "\033[32m"
+    if ./scalpa -tos -toa -tov "${testfile}" ; then
+        echo -e "\033[0m"
         echo "  ✅  Compilation succeeded for: ${testfile}"
         echo ""
 
@@ -62,6 +63,7 @@ do
         fi
 
     else
+        echo -e "\033[0m"
         echo "🔥  Compilation failed for: ${testfile}"
         exit 1
     fi

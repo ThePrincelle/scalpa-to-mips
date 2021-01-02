@@ -709,12 +709,23 @@ void insert_procedures ()
 
 void version() {
   fprintf(stderr, "Scalpa to Mips compiler\n");
-  fprintf(stderr, "Usage: ./scalpa [-version] [-o <out_file>] [-tos] file\n\n");
+  fprintf(stderr, "Usage: ./scalpa [-version] [-help] [-tos] [-tov] [-toa] [-o <out_file>] in_file\n\n");
+
+  fprintf(stderr, "Arguments:\n");
+  fprintf(stderr, "-version / -help\t display this help and exit.\n");
+  fprintf(stderr, "-tos\t\t\t displays the table of symbols before exiting.\n");
+  fprintf(stderr, "-tov\t\t\t displays the table of variables before exiting.\n");
+  fprintf(stderr, "-toa\t\t\t displays the table of arrays before exiting.\n");
+  fprintf(stderr, "-o <out_file>\t\t specify the output file for MIPS code, if not specified, defaults to <in_file>.s in the same directory as input file\n");
+  fprintf(stderr, "in_file (required):\t path to the file containing the SCALPA code to be compiled into MIPS.\n\n");
+
   fprintf(stderr, "Created by:\n");
   fprintf(stderr, "- Hugo Brua\n");
   fprintf(stderr, "- Louis Politanski\n");
   fprintf(stderr, "- Maxime Princelle\n\n");
+
   fprintf(stderr, "More info at: https://share.princelle.org/scalpa-to-mips\n");
+
   exit(0);
 }
 
@@ -723,12 +734,14 @@ int main(int argc, char* argv[])
   init();
 
   if (argc < 2) {
-      fprintf(stderr, "Usage: %s [-version] [-o <out_file>] [-tos] file\n", argv[0]);
+      fprintf(stderr, "Usage: %s [-version] [-help] [-tos] [-tov] [-toa] [-o <out_file>] in_file\n", argv[0]);
       exit(1);
   }
 
   char* optin_out_file;
   bool t_symbols_display = false;
+  bool t_variables_display = false;
+  bool t_arrays_display = false;
 
   // Handle options
   int optind;
@@ -739,11 +752,20 @@ int main(int argc, char* argv[])
     } else if (strcmp("-version", argv[optind]) == 0) {
       version();
 
+    } else if (strcmp("-help", argv[optind]) == 0) {
+      version();
+
     } else if (strcmp("-tos", argv[optind]) == 0) {
       t_symbols_display = true;
 
+    } else if (strcmp("-tov", argv[optind]) == 0) {
+      t_variables_display = true;
+
+    } else if (strcmp("-toa", argv[optind]) == 0) {
+      t_arrays_display = true;
+
     } else {
-      fprintf(stderr, "Usage: %s [-version] [-o <out_file>] [-tos] file\n", argv[0]);
+      fprintf(stderr, "Usage: %s [-version] [-help] [-tos] [-tov] [-toa] [-o <out_file>] in_file\n", argv[0]);
       exit(1);
     }
   }
@@ -788,11 +810,17 @@ int main(int argc, char* argv[])
 
   insert_procedures();
 
-  fprintf(stderr, "\n\n__Table des variable__\n\n");
-  vars_to_string(stderr);
+  // Display table of symbols if wanted.
+  if (t_variables_display) {
+    fprintf(stderr, "\n\n__Table des variables__\n\n");
+    vars_to_string(stderr);
+  }
 
-  fprintf(stderr, "\n\n__Table des arrays__\n\n");
-  arrays_to_string(stderr);
+  // Display table of symbols if wanted.
+  if (t_arrays_display) {
+    fprintf(stderr, "\n\n__Table des arrays__\n\n");
+    arrays_to_string(stderr);
+  }
 
   // Display table of symbols if wanted.
   if (t_symbols_display) {

@@ -3,10 +3,14 @@
 main:
 
 
-	addi $sp, $sp, -12
+
+	addi $sp, $sp, -16
 
 	li $t1 10
 	sw $t1 8($sp)
+
+	li $t1 1
+	sw $t1 12($sp)
 
 	li $t1 8
 	sw $t1 4($sp)
@@ -19,13 +23,18 @@ main:
 	li $v0 1
 	syscall
 
-	lw $t2 4($sp)
-	move $a0 $t2
+	lw $t1 4($sp)
+	move $a0 $t1
 	li $v0 1
 	syscall
 
-	lw $t3 8($sp)
-	move $a0 $t3
+	lw $t1 8($sp)
+	move $a0 $t1
+	li $v0 1
+	syscall
+
+	lw $t1 12($sp)
+	move $a0 $t1
 	li $v0 1
 	syscall
 

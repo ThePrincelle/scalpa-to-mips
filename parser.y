@@ -6,12 +6,13 @@
   #include "pile.h"
   #include "symbols_tab.h"
   #include "variables_tab.h"
+  #include "varArray.h"
   #include "abstract_syntax_tree.h"
 
   extern int yylex();
   extern FILE *yyin;
   extern FILE *yyout;
-  enum type {int_val, bool_val, string_val, unit_val};
+  enum type {int_val, bool_val, string_val, unit_val,array_val};
   enum op_unaire {opu_minus, opu_not};
   enum op_arith {opb_plus, opb_minus, opb_mult, opb_div, opb_pow, opb_le, opb_lt, opb_ge, opb_gt, opb_eq, opb_ne, opb_and, opb_or, opb_xor};
 
@@ -22,21 +23,53 @@
   quadrup QUAD[100];
   int nextquad = 0;
 
+ typedef struct var{
+    char* val;
+    int type;
+  } var;
 
-  typedef struct identliste{
+  typedef struct identlist_type{
       char* ident;
-      struct identliste* suivant;
-  }identliste;
+      struct identlist_type* suivant;
+  }identlist_type;
 
-  identliste* creIdentlist(char* ident) { /** permet l'insertion d'une nouvelle instruction dans la liste de lecture du code **/
-    identliste* new = malloc(sizeof(struct identliste*));
-    new->ident = ident;
+  typedef struct exprlist_type{
+      var* expr;
+      struct exprlist_type* suivant;
+  }exprlist_type;
+
+  identlist_type* creIdentlist(char* ident) { /** permet l'insertion d'une nouvelle instruction dans la liste de lecture du code **/
+    identlist_type* new = malloc(sizeof(identlist_type));
+    new->ident = strdup(ident);
     new->suivant = NULL;
     return new;
   }
 
-  identliste* concatIdentlist(identliste* l1, identliste* l2) { /** permet l'insertion d'une instruction dans une liste de lecture du code **/
-    identliste* res;
+  exprlist_type* creExprlist(var* expr) { /** permet l'insertion d'une nouvelle instruction dans la liste de lecture du code **/
+    exprlist_type* new = malloc(sizeof(exprlist_type));
+    new->expr = expr;
+    new->suivant = NULL;
+    return new;
+  }
+
+  arraytype_type* creArray(int type,rangelist_type* rangelist) { /** permet l'insertion d'une nouvelle instruction dans la liste de lecture du code **/
+    arraytype_type* new = malloc(sizeof(arraytype_type));
+    new->type = type;
+    new->rangelist = rangelist;
+    return new;
+  }
+
+  rangelist_type* creRangelist(int deb, int fin) { /** permet l'insertion d'une nouvelle instruction dans la liste de lecture du code **/
+    rangelist_type* new = malloc(sizeof(rangelist_type));
+    new->deb = deb;
+    new->fin = fin;
+    new->length = (fin - deb)+1; 
+    new->suivant = NULL;
+    return new;
+  }
+
+  identlist_type* concatIdentlist(identlist_type* l1, identlist_type* l2) { /** permet l'insertion d'une instruction dans une liste de lecture du code **/
+    identlist_type* res;
     if (l1 != NULL) res = l1;
     else if (l2 != NULL) res = l2;
          else res = NULL;
@@ -48,6 +81,35 @@
     }
     return res;
   }
+
+  exprlist_type* concatExprlist(exprlist_type* l1, exprlist_type* l2) { /** permet l'insertion d'une instruction dans une liste de lecture du code **/
+    exprlist_type* res;
+    if (l1 != NULL) res = l1;
+    else if (l2 != NULL) res = l2;
+         else res = NULL;
+    if (l1 != NULL) {
+      while (l1->suivant!=NULL) {
+        l1 = l1->suivant;
+      }
+      l1->suivant = l2;
+    }
+    return res;
+  }
+
+  rangelist_type* concatRangelist(rangelist_type* l1, rangelist_type* l2) { /** permet l'insertion d'une instruction dans une liste de lecture du code **/
+    rangelist_type* res;
+    if (l1 != NULL) res = l1;
+    else if (l2 != NULL) res = l2;
+         else res = NULL;
+    if (l1 != NULL) {
+      while (l1->suivant!=NULL) {
+        l1 = l1->suivant;
+      }
+      l1->suivant = l2;
+    }
+    return res;
+  }
+
 
   typedef struct lpos { /** liste de lecture du code **/
   int position;
@@ -103,16 +165,15 @@
 
 %union
 {
-  struct identliste* identlist_val;
+  struct identlist_type* identlist_val;
+  struct rangelist_type* rangelist_val;
+  struct arraytype_type* arraytype_val;
+  struct exprlist_type* exprlist_val;
   int bool_val;
   int int_val;
   char* string_val;
   variable* variable_val;
-  struct
-  {
-    char* val;
-    int type;
-  } var;
+  struct var* var;
 }
 
 %start program
@@ -127,7 +188,7 @@
 %token T_NOT T_LE T_GE T_NE T_LT T_GT T_EQ T_AND T_OR T_XOR
 
 %nonassoc T_LE T_GE T_NE T_LT T_GT T_EQ
-%left T_PLUS T_MINUS T_OR T_XOR
+%left T_PLUS T_MINUS T_OR T_XOR 
 %left T_DIV T_MULT T_AND
 %right T_POW
 %right OPUMINUS T_NOT
@@ -135,9 +196,12 @@
 
 %type <string_val> prog_instr sequence program varsdecl T_IDENT T_INTEGER T_BOOLEAN T_BEGIN T_STRING
 //%type <bool_val>
-%type <int_val> typename atomictype
+%type <int_val> atomictype
+%type <exprlist_val> exprlist
 %type <identlist_val> identlist
-%type <variable_val> lvalue
+%type <arraytype_val> arraytype
+%type <rangelist_val> rangelist
+//%type <variable_val> lvalue
 %type <var> cte expr
 
 %%
@@ -148,52 +212,84 @@ vardecllist : varsdecl                                              {}
             | varsdecl SEMICOLON vardecllist                        {}
             |                                                       {};
 
-varsdecl : T_VAR identlist D_POINT typename                         {
-                                                                      identliste* current_ident = $2;
+varsdecl : T_VAR identlist D_POINT atomictype                       {
+                                                                      identlist_type* current_ident = $2;
                                                                       while(current_ident != NULL)
                                                                       {
                                                                         char varscalpa[100];
                                                                         snprintf(varscalpa,100,"%s",current_ident->ident);
 
-                                                                        bool inserted = insertVar(varscalpa, size(contextes), $4);
+                                                                        variable* inserted = insertVar(varscalpa, size(contextes), $4,0);
 
-                                                                        if(!inserted)
+                                                                        if(inserted == NULL)
                                                                         {
-                                                                          yyerror("Syntax error (inserted)");
+                                                                          yyerror("Syntax error (insert)");
                                                                         }
 
                                                                         current_ident = current_ident->suivant;
                                                                       }
 
-                                                                    };
+                                                                    }
+          |   T_VAR identlist D_POINT arraytype                     {
+                                                                      identlist_type* current_ident = $2;
+                                                                      while(current_ident != NULL)
+                                                                      {
+                                                                        char varscalpa[100];
+                                                                        snprintf(varscalpa,100,"%s",current_ident->ident);
 
+                                                                        varArray* inserted = insertArray(varscalpa, size(contextes), $4,stderr);
+
+                                                                        if(inserted == NULL)
+                                                                        {
+                                                                          yyerror("Syntax error (insert)");
+                                                                        }
+
+                                                                        current_ident = current_ident->suivant;
+                                                                      }
+                                                                    }
 identlist : T_IDENT                                                 {
-                                                                      identliste* temp_ident = creIdentlist($1);
+                                                                      identlist_type* temp_ident = creIdentlist($1);
                                                                       $$ = temp_ident;
                                                                     }
           | T_IDENT COMMA identlist                                 {
-                                                                      identliste* temp_ident = creIdentlist($1);
-                                                                      identliste* concact_ident = concatIdentlist(temp_ident, $3);
+                                                                      identlist_type* temp_ident = creIdentlist($1);
+                                                                      identlist_type* concact_ident = concatIdentlist(temp_ident, $3);
                                                                       $$ = concact_ident;
                                                                     };
 
-typename : atomictype                                               {$$ = $1;}
-         //| arraytype                                                {};
+/*typename : atomictype                                               {$$ = $1;} /!\ est supprimer: pense-bête ne pas enlver !!!
+         | arraytype                                                {};*/
 
 atomictype : T_UNIT                                                 {$$ = unit_val;}
            | T_BOOL                                                 {$$ = bool_val;}
            | T_INT                                                  {$$ = int_val;}
 
-/*arraytype : T_ARRAY T_BRAOUV rangelist T_BRAFER T_OF atomictype     {}
-rangelist : T_INTEGER PP T_INTEGER                                  {}
-          | T_INTEGER PP T_INTEGER COMMA rangelist                  {}*/
+arraytype : T_ARRAY T_BRAOUV rangelist T_BRAFER T_OF atomictype     {
+                                                                      $$ = creArray($6,$3);
+                                                                    }
+rangelist : T_INTEGER PP T_INTEGER                                  { 
+                                                                      if(atoi($1) > atoi($3))
+                                                                      {
+                                                                        yyerror("Syntax error (range)");
+                                                                      }
+
+                                                                      $$ = creRangelist(atoi($1),atoi($3));
+                                                                    }
+          | T_INTEGER PP T_INTEGER COMMA rangelist                 {
+                                                                      if(atoi($1) > atoi($3))
+                                                                      {
+                                                                        yyerror("Syntax error (range)");
+                                                                      }
+
+                                                                      $$ = concatRangelist(creRangelist(atoi($1),atoi($3)),$5);
+                                                                   }
 
 prog_instr : T_RETURN               {}
            | T_RETURN expr          {}
            | T_BEGIN {push(contextes, 0);} sequence T_END {$$ = $1; pop(contextes);}
-           | T_BEGIN T_END          { /**delete all var inner current context**/}
+           | T_BEGIN T_END          { /**delete all var inner current context**/}//@TODO
            | T_WRITE expr           {
-                                     if ($2.type == int_val || $2.type == bool_val)
+                                     if ($2->type == int_val || $2->type == bool_val)
                                      {
                                       fprintf(yyout,"\n\tmove $a0 $t%d\n\tli $v0 1\n\tsyscall", size(vars_temp_mips));
                                      }
@@ -201,19 +297,77 @@ prog_instr : T_RETURN               {}
                                      {
                                       fprintf(yyout,"\n\tmove $a0 $t%d\n\tli $v0 4\n\tsyscall", size(vars_temp_mips));
                                      }
-                                    };
-           | lvalue ASSIGN expr   {
-                                    if($3.type != (int)$1->type)
-                                    {
-                                      yyerror("Syntax error (type)");
+                                     pop(vars_temp_mips);
+                                    }
+           | T_IDENT ASSIGN expr    {
+                                      struct variable* var = getVar($1);
+
+                                      if (var == NULL )
+                                      {
+                                        yyerror("Syntax error (null ou init)");
+                                      }
+
+                                      if ((int)var->context > size(contextes))
+                                      {
+                                        yyerror("Syntax error (context)");
+                                      }
+                                      if($3->type != (int)var->type)
+                                      {
+                                        yyerror("Syntax error (type)");
+                                      }
+
+                                      var->init = true;
+
+
+                                      fprintf(yyout,"\n\tsw $t%d %d($sp)", size(vars_temp_mips), var->p_memoire);
+                                      pop(vars_temp_mips);
                                     }
 
-                                    $1->init = true;
+          | T_IDENT T_BRAOUV exprlist T_BRAFER ASSIGN expr  {
+                                                              struct varArray* temp_array = getArray($1);
+                                                              struct variable* temp_var = temp_array->array;
 
+                                                              if (temp_var == NULL )
+                                                              {
+                                                                yyerror("Syntax error (null ou init)");
+                                                              }
 
-                                    fprintf(yyout,"\n\tsw $t%d %d($sp)", size(vars_temp_mips), $1->p_memoire);
-                                    pop(vars_temp_mips);
-                                  }
+                                                              if ((int)temp_var->context > size(contextes))
+                                                              {
+                                                                yyerror("Syntax error (context)");
+                                                              }
+
+                                                              if($6->type != (int)temp_array->type)
+                                                              {
+                                                                yyerror("Syntax error (type)");
+                                                              }
+
+                                                              exprlist_type* current_exprlist = $3;
+                                                              int p_memoire = temp_var->p_memoire;
+                                                              push(vars_temp_mips, size(contextes));
+                                                              fprintf(yyout,"\n\tmove $t%d $t1",size(vars_temp_mips));
+                                                              fprintf(yyout,"\n\tmove $t1 $t%d",size(vars_temp_mips)-1);
+                                                              fprintf(yyout,"\n\tmove $t%d $t%d",size(vars_temp_mips)-1, size(vars_temp_mips));
+                                                              fprintf(yyout,"\n\tli $t%d %d",size(vars_temp_mips), p_memoire);
+                                                              while(current_exprlist != NULL)
+                                                              {
+                                                                var* temp_expr = current_exprlist->expr;
+                                                                if(temp_expr->type != int_val)
+                                                                {
+                                                                  yyerror("Syntax error (type array)");
+                                                                }
+                                                                //@TODO: if $t
+                                                                fprintf(yyout,"\n\tadd $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1,size(vars_temp_mips));
+                                                                pop(vars_temp_mips);
+                                                                current_exprlist=current_exprlist->suivant;
+                                                              }
+
+                                                              temp_var->init = true;
+                                                              fprintf(yyout,"\n\tadd $t%d, $sp, $t%d", size(vars_temp_mips), size(vars_temp_mips));
+                                                              fprintf(yyout,"\n\tsw $t%d 0($t%d)", size(vars_temp_mips)-1, size(vars_temp_mips));
+                                                              pop(vars_temp_mips);
+                                                              pop(vars_temp_mips);
+                                                            };
 
 sequence : prog_instr SEMICOLON sequence {
 
@@ -223,46 +377,36 @@ sequence : prog_instr SEMICOLON sequence {
                                           }
          | prog_instr                     { $$ = $1 ;};
 
-lvalue : T_IDENT                {
-                                  struct variable* var = getVar($1);
-
-                                  if (var == NULL )
-                                  {
-                                    yyerror("Syntax error (null ou init)");
-                                  }
-
-                                  if ((int)var->context > size(contextes))
-                                  {
-                                    yyerror("Syntax error (context)");
-                                  }
-
-
-                                  $$ = var;
-                                }
-       //| ident [ exprlist ]
+exprlist : expr                              {
+                                                $$ = creExprlist($1);
+                                             }
+         | expr COMMA exprlist               {  
+                                                $$ = concatExprlist(creExprlist($1),$3);
+                                             };
 
 expr : cte                      {
-                                  if ($1.type == int_val || $1.type == bool_val)
+                                  $$=$1;
+                                  if ($1->type == int_val || $1->type == bool_val)
                                   {
                                     push(vars_temp_mips, size(contextes));
-                                    fprintf(yyout,"\n\tli $t%d %d",size(vars_temp_mips), atoi($1.val));
+                                    fprintf(yyout,"\n\tli $t%d %d",size(vars_temp_mips), atoi($1->val));
                                   }
                                   else
                                   {
                                     push(vars_temp_mips, size(contextes));
-                                    fprintf(yyout,"\n\tli $t%d %s",size(vars_temp_mips) ,$1.val);
+                                    fprintf(yyout,"\n\tli $t%d %s",size(vars_temp_mips) ,$1->val);
                                   }
-                                  $$.type = $1.type;
+                                  $$->type = $1->type;
                                 }
       | T_PAROUV expr T_PARFER  {
-                                  $$.val = $2.val;
-                                  $$.type = $2.type;
+                                  $$=$2;
                                 }
       | T_MINUS expr            {
-                                    if($2.type == int_val )
+                                    $$=$2;
+                                    if($2->type == int_val )
                                     {
                                       fprintf(yyout,"\n\tmul $t%d $t%d -1\n\tmove $a0 $t6", size(vars_temp_mips), size(vars_temp_mips));
-                                      $$.type = int_val;
+                                      $$->type = int_val;
                                     }
                                     else
                                     {
@@ -270,10 +414,11 @@ expr : cte                      {
                                     }
                                 }%prec OPUMINUS
       | T_NOT expr              {
-                                  if($2.type == bool_val )
+                                  $$=$2;
+                                  if($2->type == bool_val )
                                   {
                                     fprintf(yyout,"\n\tseq $t%d $t%d $zero\n\tmove $a0 $t6", size(vars_temp_mips), size(vars_temp_mips));
-                                    $$.type = bool_val;
+                                    $$->type = bool_val;
                                   }
                                   else
                                   {
@@ -281,12 +426,12 @@ expr : cte                      {
                                   }
                                 }
       | expr T_PLUS expr           {
-
-                                    if ($1.type == int_val && $3.type == int_val)
+                                    $$=$1;
+                                    if ($1->type == int_val && $3->type == int_val)
                                     {
                                       fprintf(yyout,"\n\tadd $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
                                       pop(vars_temp_mips);
-                                      $$.type = int_val;
+                                      $$->type = int_val;
                                     }
                                     else
                                     {
@@ -294,11 +439,12 @@ expr : cte                      {
                                     }
                                   }
       | expr T_MINUS expr         {
-                                    if ($1.type == int_val && $3.type == int_val)
+                                    $$=$1;
+                                    if ($1->type == int_val && $3->type == int_val)
                                     {
                                       fprintf(yyout,"\n\tsub $t%d $t%d $t%d",size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
                                       pop(vars_temp_mips);
-                                      $$.type = int_val;
+                                      $$->type = int_val;
                                     }
                                     else
                                     {
@@ -306,11 +452,12 @@ expr : cte                      {
                                     }
                                   }
     | expr T_MULT expr            {
-                                    if ($1.type == int_val && $3.type == int_val)
+                                    $$=$1;
+                                    if ($1->type == int_val && $3->type == int_val)
                                       {
                                         fprintf(yyout,"\n\tmul $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
                                         pop(vars_temp_mips);
-                                        $$.type = int_val;
+                                        $$->type = int_val;
                                       }
                                       else
                                       {
@@ -318,11 +465,12 @@ expr : cte                      {
                                       }
                                   }
     | expr T_DIV expr            {
-                                    if ($1.type == int_val && $3.type == int_val)
+                                    $$=$1;
+                                    if ($1->type == int_val && $3->type == int_val)
                                       {
                                         fprintf(yyout,"\n\tdiv $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
                                         pop(vars_temp_mips);
-                                        $$.type = int_val;
+                                        $$->type = int_val;
                                       }
                                       else
                                       {
@@ -330,7 +478,8 @@ expr : cte                      {
                                       }
                                   }
     | expr T_POW expr             {
-                                    if ($1.type == int_val && $3.type == int_val)
+                                    $$=$1;
+                                    if ($1->type == int_val && $3->type == int_val)
                                     {
                                       if(!pow_exist)
                                       {
@@ -339,7 +488,7 @@ expr : cte                      {
                                       char* code = "\n\tmove $a2 $t%d\n\tmove $a3 $t%d\n\tmove $t8 $a2\n\tjal pow\n\tmove $t%d $t8";
                                       fprintf(yyout,code, size(vars_temp_mips)-1, size(vars_temp_mips), size(vars_temp_mips)-1);
                                       pop(vars_temp_mips);
-                                      $$.type = int_val;
+                                      $$->type = int_val;
                                     }
                                     else
                                     {
@@ -347,11 +496,12 @@ expr : cte                      {
                                     }
                                  }
     | expr T_LE expr             {
-                                    if ($1.type == int_val && $3.type == int_val)
+                                    $$=$1;
+                                    if ($1->type == int_val && $3->type == int_val)
                                     {
                                       fprintf(yyout,"\n\tsle $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
                                       pop(vars_temp_mips);
-                                      $$.type = bool_val;
+                                      $$->type = bool_val;
                                     }
                                     else
                                     {
@@ -359,11 +509,12 @@ expr : cte                      {
                                     }
                                  }
       | expr T_LT expr           {
-                                    if ($1.type == int_val && $3.type == int_val)
+                                    $$=$1;
+                                    if ($1->type == int_val && $3->type == int_val)
                                     {
                                       fprintf(yyout,"\n\tslt $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
                                       pop(vars_temp_mips);
-                                      $$.type = bool_val;
+                                      $$->type = bool_val;
                                     }
                                     else
                                     {
@@ -371,11 +522,12 @@ expr : cte                      {
                                     }
                                  }
       | expr T_GE expr           {
-                                    if ($1.type == int_val && $3.type == int_val)
+                                    $$=$1;
+                                    if ($1->type == int_val && $3->type == int_val)
                                     {
                                       fprintf(yyout,"\n\tsge $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
                                       pop(vars_temp_mips);
-                                      $$.type = bool_val;
+                                      $$->type = bool_val;
                                     }
                                     else
                                     {
@@ -383,11 +535,12 @@ expr : cte                      {
                                     }
                                  }
       | expr T_GT expr           {
-                                    if ($1.type == int_val && $3.type == int_val)
+                                    $$=$1;
+                                    if ($1->type == int_val && $3->type == int_val)
                                     {
                                       fprintf(yyout,"\n\tsgt $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
                                       pop(vars_temp_mips);
-                                      $$.type = bool_val;
+                                      $$->type = bool_val;
                                     }
                                     else
                                     {
@@ -395,11 +548,12 @@ expr : cte                      {
                                     }
                                  }
       | expr T_EQ expr           {
-                                  if (($1.type == int_val || $1.type == bool_val) && $1.type == $3.type )
+                                  $$=$1;
+                                  if (($1->type == int_val || $1->type == bool_val) && $1->type == $3->type )
                                   {
                                     fprintf(yyout,"\n\tseq $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
                                     pop(vars_temp_mips);
-                                    $$.type = $1.type;
+                                    $$->type = $1->type;
                                   }
                                   else
                                   {
@@ -407,11 +561,12 @@ expr : cte                      {
                                   }
                                 }
       | expr T_NE expr          {
-                                  if (($1.type == int_val || $1.type == bool_val) && $1.type == $3.type )
+                                  $$=$1;
+                                  if (($1->type == int_val || $1->type == bool_val) && $1->type == $3->type )
                                   {
                                     fprintf(yyout,"\n\tsne $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
                                     pop(vars_temp_mips);
-                                    $$.type = $1.type;
+                                    $$->type = $1->type;
                                   }
                                   else
                                   {
@@ -419,11 +574,12 @@ expr : cte                      {
                                   }
                                 }
       | expr T_AND expr         {
-                                  if ($1.type == bool_val && $3.type == bool_val)
+                                  $$=$1;
+                                  if ($1->type == bool_val && $3->type == bool_val)
                                   {
                                     fprintf(yyout,"\n\tand $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
                                     pop(vars_temp_mips);
-                                    $$.type = bool_val;
+                                    $$->type = bool_val;
                                   }
                                   else
                                   {
@@ -432,11 +588,12 @@ expr : cte                      {
                                 }
 
       | expr T_OR expr          {
-                                  if ($1.type == bool_val && $3.type == bool_val)
+                                  $$=$1;
+                                  if ($1->type == bool_val && $3->type == bool_val)
                                   {
                                     fprintf(yyout,"\n\tor $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
                                     pop(vars_temp_mips);
-                                    $$.type = bool_val;
+                                    $$->type = bool_val;
                                   }
                                   else
                                   {
@@ -444,11 +601,12 @@ expr : cte                      {
                                   }
                                 }
       | expr T_XOR expr         {
-                                  if ($1.type == bool_val && $3.type == bool_val)
+                                  $$=$1;
+                                  if ($1->type == bool_val && $3->type == bool_val)
                                   {
                                     fprintf(yyout,"\n\txor $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
                                     pop(vars_temp_mips);
-                                    $$.type = bool_val;
+                                    $$->type = bool_val;
                                   }
                                   else
                                   {
@@ -456,6 +614,7 @@ expr : cte                      {
                                   }
                                 }
       | T_IDENT                 {
+                                  $$=malloc(sizeof(var));
                                   struct variable* var = getVar($1);
 
                                   if (var == NULL || !var->init )
@@ -469,13 +628,61 @@ expr : cte                      {
                                   }
                                   push(vars_temp_mips, size(contextes));
                                   fprintf(yyout,"\n\tlw $t%d %d($sp)", size(vars_temp_mips),var->p_memoire);
+                                  $$->type = var->type;
                                 }
 
-      //| T_IDENT [ exprlist ]
+      | T_IDENT T_BRAOUV exprlist T_BRAFER {
+                                              $$=malloc(sizeof(var));
+                                              struct varArray* temp_array = getArray($1);
+                                              struct variable* temp_var = temp_array->array;
 
-cte : T_INTEGER                 {$$.val = $1; $$.type = int_val;}
-    | T_BOOLEAN                 {$$.val = $1; $$.type = bool_val;}
-    | T_STRING                  {$$.val = $1; $$.type = string_val;};
+                                              if (temp_var == NULL || !temp_var->init )
+                                              {
+                                                yyerror("Syntax error (NULL ou init)");
+                                              }
+
+                                              if ((int)temp_var->context > size(contextes))
+                                              {
+                                                yyerror("Syntax error (context)");
+                                              }
+
+                                              exprlist_type* current_exprlist = $3;
+                                              int p_memoire = temp_var->p_memoire;
+                                              push(vars_temp_mips, size(contextes));
+                                              fprintf(yyout,"\n\tli $t%d %d",size(vars_temp_mips), p_memoire);
+                                              while(current_exprlist != NULL)
+                                              {
+                                                var* temp_expr = current_exprlist->expr;
+                                                if(temp_expr->type != int_val)
+                                                {
+                                                  yyerror("Syntax error (type array)");
+                                                }
+                                                //@TODO: if $t
+                                              
+                                                fprintf(yyout,"\n\tadd $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1,size(vars_temp_mips));
+                                                pop(vars_temp_mips);
+                                                current_exprlist=current_exprlist->suivant;
+                                              }
+                                              fprintf(yyout,"\n\tadd $t%d, $sp, $t%d", size(vars_temp_mips), size(vars_temp_mips));
+                                              fprintf(yyout,"\n\tlw $t%d 0($t%d)", size(vars_temp_mips), size(vars_temp_mips));
+                                              $$->type = temp_array->type;
+                                           };
+
+cte : T_INTEGER                 { 
+                                  $$=malloc(sizeof(var)); 
+                                  $$->val = $1; 
+                                  $$->type = int_val;
+                                }
+    | T_BOOLEAN                 {
+                                  $$=malloc(sizeof(var)); 
+                                  $$->val = $1; 
+                                  $$->type = bool_val;
+      }
+    | T_STRING                  {
+                                  $$=malloc(sizeof(var)); 
+                                  $$->val = $1; 
+                                  $$->type = string_val;
+                                };
 
 %%
 
@@ -488,7 +695,8 @@ void init ()
 {
   contextes = newStack();
   vars_temp_mips = newStack();
-  initVarArray();
+  initVarTab();
+  initArrayTab();
 }
 
 void insert_procedures ()
@@ -583,7 +791,11 @@ int main(int argc, char* argv[])
 
   insert_procedures();
 
+  fprintf(stderr, "\n\n__Table des variable__\n\n");
   vars_to_string(stderr);
+
+  fprintf(stderr, "\n\n__Table des arrays__\n\n");
+  arrays_to_string(stderr);
 
   // Display table of symbols if wanted.
   if (t_symbols_display) {

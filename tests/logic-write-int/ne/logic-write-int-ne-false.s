@@ -2,6 +2,7 @@
 #	mainOnly
 main:
 
+	addi $sp, $sp, 0
 	li $t1 2
 	li $t2 2
 	seq $t1 $t1 $t2

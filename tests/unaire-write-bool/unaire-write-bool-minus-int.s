@@ -2,9 +2,8 @@
 #	mainOnly
 main:
 
-	li $t1 10
-	mul $t1 $t1 -1
-	move $a0 $t6
+	addi $sp, $sp, 0
+	li $t1 -10
 	move $a0 $t1
 	li $v0 1
 	syscall

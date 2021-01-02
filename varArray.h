@@ -15,6 +15,7 @@ typedef struct rangelist_type{
     int deb;
     int fin;
     int length;
+    int totLenght;
     struct rangelist_type* suivant;
 }rangelist_type;
 

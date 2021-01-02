@@ -65,7 +65,8 @@
     rangelist_type* new = malloc(sizeof(rangelist_type));
     new->deb = deb;
     new->fin = fin;
-    new->length = (fin - deb)+1; 
+    new->length = (fin - deb)+1;
+    new->totLenght = (fin - deb)+1; 
     new->suivant = NULL;
     return new;
   }
@@ -118,6 +119,13 @@
         l1 = l1->suivant;
       }
       l1->suivant = l2;
+    }
+    if(l1 != NULL)
+    {
+      if(l2 != NULL)
+      {
+        res->totLenght=l1->totLenght*l2->totLenght;
+      } 
     }
     return res;
   }
@@ -284,7 +292,7 @@ rangelist : T_INTEGER PP T_INTEGER                                  {
                                                                       {
                                                                         yyerror("Syntax error (range)");
                                                                       }
-
+                                                                      fprintf(stderr,"ICI 2 : %d %d\n",atoi($1),atoi($3));
                                                                       $$ = creRangelist(atoi($1),atoi($3));
                                                                     }
           | T_INTEGER PP T_INTEGER COMMA rangelist                 {
@@ -292,8 +300,8 @@ rangelist : T_INTEGER PP T_INTEGER                                  {
                                                                       {
                                                                         yyerror("Syntax error (range)");
                                                                       }
-
-                                                                      $$ = concatRangelist(creRangelist(atoi($1),atoi($3)),$5);
+                                                                      rangelist_type* temp_rangelist =  creRangelist(atoi($1),atoi($3));
+                                                                      $$ = concatRangelist(temp_rangelist,$5);
                                                                    }
 
 prog_instr : T_RETURN               {}
@@ -402,16 +410,24 @@ prog_instr : T_RETURN               {}
                                                                 
                                                                 fprintf(yyout,"\n\tli $t%d %d", size(vars_temp_mips),current_rangelist->deb);
                                                                 fprintf(yyout,"\n\tblt $t%d $t%d error", lec_pos, size(vars_temp_mips));
+
                                                                 if(lec_temp == 1)
                                                                 {
                                                                   fprintf(yyout,"\n\tsub $t%d $t%d $t%d",size(vars_temp_mips)-1, lec_pos, size(vars_temp_mips));
+                                                                  push(vars_temp_mips, size(contextes));
+                                                                  fprintf(yyout,"\n\tmul $t%d $t%d %d\n", size(vars_temp_mips), size(vars_temp_mips)-2, current_rangelist->totLenght/current_rangelist->length);
+                                                                  pop(vars_temp_mips);
                                                                   fprintf(yyout,"\n");
                                                                 }
                                                                 else
                                                                 {
                                                                   fprintf(yyout,"\n\tsub $t%d $t%d $t%d",size(vars_temp_mips), lec_pos, size(vars_temp_mips));
-                                                                  fprintf(yyout,"\n\tmul $t%d $t%d $t%d\n", size(vars_temp_mips)-1, size(vars_temp_mips), size(vars_temp_mips)-1);
+                                                                  fprintf(yyout,"\n\tmul $t%d $t%d %d", size(vars_temp_mips), size(vars_temp_mips), current_rangelist->totLenght/current_rangelist->length);
+                                                                  push(vars_temp_mips, size(contextes));
+                                                                  fprintf(yyout,"\n\tadd $t%d $t%d $t%d\n",size(vars_temp_mips), size(vars_temp_mips)-1, size(vars_temp_mips));
+                                                                  pop(vars_temp_mips);
                                                                 }
+
                                                                 current_exprlist=current_exprlist->suivant;
                                                                 current_rangelist = current_rangelist->suivant;
                                                                 lec_temp++;
@@ -420,9 +436,9 @@ prog_instr : T_RETURN               {}
                                                               temp_var->init = true;
                                                               push(vars_temp_mips, size(contextes));
                                                               fprintf(yyout,"\n\tli $t%d %d",size(vars_temp_mips)-lec_temp, p_memoire);
-                                                              fprintf(yyout,"\n\tadd $t%d $t%d $t%d", size(vars_temp_mips)-lec_temp+1, size(vars_temp_mips)-lec_temp,size(vars_temp_mips)-1);
-                                                              fprintf(yyout,"\n\tadd $t%d, $sp, $t%d", size(vars_temp_mips)-lec_temp+1, size(vars_temp_mips)-lec_temp+1);
-                                                              fprintf(yyout,"\n\tsw $t%d 0($t%d)", size(vars_temp_mips)-lec_temp-1, size(vars_temp_mips)-lec_temp+1);
+                                                              fprintf(yyout,"\n\tadd $t%d $t%d $t%d", size(vars_temp_mips)-lec_temp, size(vars_temp_mips)-lec_temp,size(vars_temp_mips));
+                                                              fprintf(yyout,"\n\tadd $t%d, $sp, $t%d", size(vars_temp_mips)-lec_temp, size(vars_temp_mips)-lec_temp);
+                                                              fprintf(yyout,"\n\tsw $t%d 0($t%d)", size(vars_temp_mips)-lec_temp-1, size(vars_temp_mips)-lec_temp);
                                                               pop(vars_temp_mips);
                                                               pop(vars_temp_mips);
 
@@ -746,23 +762,28 @@ expr : cte                      {
                                                   yyerror("Syntax error (read out array)");
                                                 }
                                                 
+                                               
                                                 fprintf(yyout,"\n\tli $t%d %d", size(vars_temp_mips),current_rangelist->fin);
                                                 fprintf(yyout,"\n\tbgt $t%d $t%d error", lec_temp, size(vars_temp_mips));
                                                 
                                                 fprintf(yyout,"\n\tli $t%d %d", size(vars_temp_mips),current_rangelist->deb);
                                                 fprintf(yyout,"\n\tblt $t%d $t%d error", lec_temp, size(vars_temp_mips));
+                                                fprintf(yyout,"\n\tsub $t%d $t%d $t%d",size(vars_temp_mips), lec_temp, size(vars_temp_mips));
                                                 if(lec_temp == 1)
                                                 {
-                                                  fprintf(yyout,"\n\tsub $t%d $t%d $t%d",size(vars_temp_mips), lec_temp, size(vars_temp_mips));
+                                                  push(vars_temp_mips, size(contextes));
+                                                  fprintf(yyout,"\n\tmul $t%d $t%d %d\n", size(vars_temp_mips), size(vars_temp_mips)-2,  current_rangelist->totLenght/current_rangelist->length);
+                                                  pop(vars_temp_mips);
                                                   fprintf(yyout,"\n");
                                                 }
                                                 else
                                                 {
-                                                  push(vars_temp_mips, size(contextes));
-                                                  fprintf(yyout,"\n\tsub $t%d $t%d $t%d",size(vars_temp_mips), lec_temp, size(vars_temp_mips));
-                                                  fprintf(yyout,"\n\tmul $t%d $t%d $t%d\n", size(vars_temp_mips)-1, size(vars_temp_mips), size(vars_temp_mips)-1);
+                                                  fprintf(yyout,"\n\tmul $t%d $t%d %d", size(vars_temp_mips), size(vars_temp_mips),  current_rangelist->totLenght/current_rangelist->length);
+                                                   push(vars_temp_mips, size(contextes));
+                                                  fprintf(yyout,"\n\tadd $t%d $t%d $t%d\n",size(vars_temp_mips), size(vars_temp_mips)-1, size(vars_temp_mips));
                                                   pop(vars_temp_mips);
                                                 }
+
                                                 current_exprlist=current_exprlist->suivant;
                                                 current_rangelist = current_rangelist->suivant;
                                                 lec_temp++;
@@ -772,7 +793,7 @@ expr : cte                      {
 
                                               push(vars_temp_mips, size(contextes));
                                               fprintf(yyout,"\n\tli $t%d %d",size(vars_temp_mips)-lec_temp, p_memoire);
-                                              fprintf(yyout,"\n\tadd $t%d $t%d $t%d", size(vars_temp_mips)-lec_temp+1, size(vars_temp_mips)-lec_temp,size(vars_temp_mips)-1);
+                                              fprintf(yyout,"\n\tadd $t%d $t%d $t%d", size(vars_temp_mips)-lec_temp+1, size(vars_temp_mips)-lec_temp,size(vars_temp_mips));
                                               fprintf(yyout,"\n\tadd $t%d, $sp, $t%d", size(vars_temp_mips)-lec_temp+1, size(vars_temp_mips)-lec_temp+1);
                                               fprintf(yyout,"\n\tlw $t%d 0($t%d)", size(vars_temp_mips)-lec_temp, size(vars_temp_mips)-lec_temp+1);
 

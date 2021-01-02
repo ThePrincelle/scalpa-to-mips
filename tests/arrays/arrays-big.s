@@ -44,10 +44,17 @@ main:
 	sub $t6 $t4 $t6
 	mul $t5 $t6 $t5
 
+
+    move $a0 $t5
+	li $v0 1
+	syscall
 	li $t2 4
-	add $t3 $t2 $t6
-	add $t3, $sp, $t3
-	sw $t1 0($t3)
+	add $t2 $t2 $t5
+	move $a0 $t2
+	li $v0 1
+	syscall
+	add $t2, $sp, $t2
+	sw $t1 0($t2)
 
 	li $t1 -3
 	li $t2 1
@@ -84,9 +91,6 @@ main:
 	add $t2 $t1 $t5
 	add $t2, $sp, $t2
 	lw $t1 0($t2)
-	move $a0 $t1
-	li $v0 1
-	syscall
 
 end:
 	li $v0 10

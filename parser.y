@@ -292,7 +292,6 @@ rangelist : T_INTEGER PP T_INTEGER                                  {
                                                                       {
                                                                         yyerror("Syntax error (range)");
                                                                       }
-                                                                      fprintf(stderr,"ICI 2 : %d %d\n",atoi($1),atoi($3));
                                                                       $$ = creRangelist(atoi($1),atoi($3));
                                                                     }
           | T_INTEGER PP T_INTEGER COMMA rangelist                 {

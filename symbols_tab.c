@@ -2,51 +2,64 @@
 
 int symbols_count;
 int symbols_capacity;
-char** symbols_array;
 
-/*
-    Function that simply returns the code of the symbol given in the array of symbols.
-*/
-int getCodeSymbol(char* symbolName){
-    int i;
-    for (i = 1; i < symbols_count; i++){
-        // For each symbol in the table, compare if it is the same as the input symbol.
-        if (strcmp(symbols_array[i], symbolName) == 0){
-            return i; // Return the position of the symbol in the table
-        }
-    }
-    return 0;
+typedef struct symbol {
+  char* name;
+  int type;
+} symbol;
+
+symbol** symbols_array;
+
+// Utility function to initialize symbols_array
+void init_symbols_array()
+{
+  symbols_array = malloc(symbols_capacity*sizeof(symbol*));
 }
 
 /*
-    Function that either adds the symbol to the table of if it already exists simply finds it.
-    In every case, we return the code of the symbol in the table.
+    Function that either adds the symbol to the table of if it already exists do nothing.
 */
-int findOrInsertSymbol(char* symbolName){
-    int i;
+void insertSymbol(char* name, int type){
 
-    // Search for the symbol in the table and return the code if it exists.
-    for (i = 1; i < symbols_count; i++){
-        // For each symbol in the table, compare if it is the same as the input symbol.
-        if (strcmp(symbols_array[i], symbolName) == 0){
-            return i; // Return the position of the symbol in the table
-        }
-    }
+  // Search for the symbol in the table and return the code if it exists.
+  int i;
+  for (i = 1; i < symbols_count; i++){
+      // For each symbol in the table, compare if it is the same as the input symbol.
+      if (strcmp(symbols_array[i]->name, name) == 0){
+        break; // Return the position of the symbol in the table
+      }
+  }
 
-    // If we add the symbol in the table, update the symbol_capacity
-    if (symbols_count >= symbols_capacity) {
-        symbols_capacity*=2;
-        symbols_array = (char**)realloc(symbols_array, symbols_capacity * sizeof(char*));
-    }
+  // If we add the symbol in the table, update the symbol_capacity
+  if (symbols_count >= symbols_capacity) {
+      symbols_capacity*=2;
+      symbols_array = (symbol**)realloc(symbols_array, symbols_capacity * sizeof(symbol*));
+  }
 
-    // Add symbol to the array and increment the symbol_count.
-    char* txt = (char*)malloc(strlen(symbolName));
-    strncpy(txt, symbolName, strlen(symbolName) + 1);
-    symbols_array[symbols_count] = txt;
-    symbols_count++;
+  // Create new symbol object.
+  symbol* new_symbol = malloc(sizeof(symbol));
+  new_symbol->name = strdup(name);
+  new_symbol->type = type;
 
-    // Return the number of symbols in the array
-    return symbols_count - 1;
+  // Add the symbol to the list of symbols.
+  symbols_array[symbols_count] = new_symbol;
+
+  // Increment the symbol count
+  symbols_count++;
+}
+
+/*
+  Get string value of enum type
+*/
+char* getSymbolType(int type){
+  switch(type){
+    int_val: return "integer";
+    bool_val: return "boolean";
+    string_val: return "string";
+    unit_val: return "unit";
+    array_val: return "array";
+    default: return "unkown";
+  }
 }
 
 /*
@@ -55,16 +68,16 @@ int findOrInsertSymbol(char* symbolName){
 void display_symbols_table(FILE *returns){
   if (symbols_count > 0) {
     // Display table
-    fprintf(returns, "Index \t Symbole \t\n");
+    fprintf(returns, "Index \t| Symbole \t| Type \n");
 
     int i;
     for (i = 1; i < symbols_count; i++) {
-      fprintf(returns, "%d \t %s \t\n", i, symbols_array[i]);
+      fprintf(returns, "%d \t| %s \t| %s \n", i, symbols_array[i]->name, getSymbolType(symbols_array[i]->type));
     }
 
     fprintf(returns, "\n");
   }
   else {
-    fprintf(returns, "No symbols found.\n");
+    fprintf(returns, "No symbols found.\n\n");
   }
 }

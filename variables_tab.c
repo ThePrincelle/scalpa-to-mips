@@ -1,4 +1,5 @@
 #include "variables_tab.h"
+#include "symbols_tab.h"
 
 int vars_count;
 int vars_capacity = 10;
@@ -33,7 +34,7 @@ variable* getVar(char* varName){
 */
 void vars_to_string(FILE *returns)
 {
-  
+
   if(vars_count == 0)
   {
     fprintf(stderr, "\n\t--None--\n");
@@ -52,35 +53,41 @@ void vars_to_string(FILE *returns)
   Function that returns the result of the insertion in the vars_array.
 */
 variable* insertVar(char* varName, int context, int type, int array_nbvars){
-    // Retrieve the variable position in the table.
-    variable* old_var = getVar(varName);
+  // Report symbol to symbol table.
+  insertSymbol(strdup(varName), type);
 
-    // If the variable doesn't exist, create it.
-    if(old_var != NULL)
+  // Retrieve the variable position in the table.
+  variable* old_var = getVar(varName);
+
+  // If the variable doesn't exist, create it.
+  if(old_var != NULL)
+  {
+    // If the variable already exists in the current context, return false and do not insert it.
+    if(old_var->context<=context)
     {
-      // If the variable already exists in the current context, return false and do not insert it.
-      if(old_var->context<=context)
-      {
-        return false;
-      }
+      return false;
     }
-    variable* new_var;
-    
-    new_var = newVar(varName, context, type, array_nbvars);
-  
-     
-    // Variable successfully added. Return true then.
-    return new_var;
+  }
+
+  variable* new_var;
+
+  new_var = newVar(varName, context, type, array_nbvars);
+
+  // Variable successfully added. Return true then.
+  return new_var;
 }
 
+/*
+  Create a new variable object and return it.
+*/
 variable* newVar(char* varName, int context, int type, int array_nbvars)
 {
   // If we add the variable in the table, update the variable_capacity
-    if (vars_count >= vars_capacity) {
-        vars_capacity*=2;
-        vars_array = (variable**)realloc(vars_array, vars_capacity * sizeof(variable*));
-    }
-    
+  if (vars_count >= vars_capacity) {
+    vars_capacity*=2;
+    vars_array = (variable**)realloc(vars_array, vars_capacity * sizeof(variable*));
+  }
+
   variable* new_var = malloc(sizeof(variable));
   new_var->scalpavar = strdup(varName);
   new_var->context = context;

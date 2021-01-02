@@ -12,7 +12,7 @@
   extern int yylex();
   extern FILE *yyin;
   extern FILE *yyout;
-  enum type {int_val, bool_val, string_val, unit_val,array_val};
+  enum type {int_val, bool_val, string_val, unit_val, array_val};
   enum op_unaire {opu_minus, opu_not};
   enum op_arith {opb_plus, opb_minus, opb_mult, opb_div, opb_pow, opb_le, opb_lt, opb_ge, opb_gt, opb_eq, opb_ne, opb_and, opb_or, opb_xor};
 
@@ -63,7 +63,7 @@
     rangelist_type* new = malloc(sizeof(rangelist_type));
     new->deb = deb;
     new->fin = fin;
-    new->length = (fin - deb)+1; 
+    new->length = (fin - deb)+1;
     new->suivant = NULL;
     return new;
   }
@@ -188,7 +188,7 @@
 %token T_NOT T_LE T_GE T_NE T_LT T_GT T_EQ T_AND T_OR T_XOR
 
 %nonassoc T_LE T_GE T_NE T_LT T_GT T_EQ
-%left T_PLUS T_MINUS T_OR T_XOR 
+%left T_PLUS T_MINUS T_OR T_XOR
 %left T_DIV T_MULT T_AND
 %right T_POW
 %right OPUMINUS T_NOT
@@ -267,7 +267,7 @@ atomictype : T_UNIT                                                 {$$ = unit_v
 arraytype : T_ARRAY T_BRAOUV rangelist T_BRAFER T_OF atomictype     {
                                                                       $$ = creArray($6,$3);
                                                                     }
-rangelist : T_INTEGER PP T_INTEGER                                  { 
+rangelist : T_INTEGER PP T_INTEGER                                  {
                                                                       if(atoi($1) > atoi($3))
                                                                       {
                                                                         yyerror("Syntax error (range)");
@@ -380,7 +380,7 @@ sequence : prog_instr SEMICOLON sequence {
 exprlist : expr                              {
                                                 $$ = creExprlist($1);
                                              }
-         | expr COMMA exprlist               {  
+         | expr COMMA exprlist               {
                                                 $$ = concatExprlist(creExprlist($1),$3);
                                              };
 
@@ -658,7 +658,7 @@ expr : cte                      {
                                                   yyerror("Syntax error (type array)");
                                                 }
                                                 //@TODO: if $t
-                                              
+
                                                 fprintf(yyout,"\n\tadd $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1,size(vars_temp_mips));
                                                 pop(vars_temp_mips);
                                                 current_exprlist=current_exprlist->suivant;
@@ -668,19 +668,19 @@ expr : cte                      {
                                               $$->type = temp_array->type;
                                            };
 
-cte : T_INTEGER                 { 
-                                  $$=malloc(sizeof(var)); 
-                                  $$->val = $1; 
+cte : T_INTEGER                 {
+                                  $$=malloc(sizeof(var));
+                                  $$->val = $1;
                                   $$->type = int_val;
                                 }
     | T_BOOLEAN                 {
-                                  $$=malloc(sizeof(var)); 
-                                  $$->val = $1; 
+                                  $$=malloc(sizeof(var));
+                                  $$->val = $1;
                                   $$->type = bool_val;
       }
     | T_STRING                  {
-                                  $$=malloc(sizeof(var)); 
-                                  $$->val = $1; 
+                                  $$=malloc(sizeof(var));
+                                  $$->val = $1;
                                   $$->type = string_val;
                                 };
 
@@ -697,6 +697,7 @@ void init ()
   vars_temp_mips = newStack();
   initVarTab();
   initArrayTab();
+  init_symbols_array();
 }
 
 void insert_procedures ()
@@ -720,10 +721,6 @@ void version() {
 int main(int argc, char* argv[])
 {
   init();
-
-  // Initialise the array of symbols with a specified capacity.
-  symbols_capacity = 1000;
-  symbols_array = (char**)malloc(symbols_capacity*sizeof(char*));
 
   if (argc < 2) {
       fprintf(stderr, "Usage: %s [-version] [-o <out_file>] [-tos] file\n", argv[0]);

@@ -5,19 +5,18 @@
 #include <stdlib.h>
 #include <string.h>
 
-int symbols_capacity;
-char** symbols_array;
+// Utility function to initialize symbols_array
+void init_symbols_array();
 
 /*
-    Function that simply returns the code of the symbol given in the array of symbols.
+    Function that either adds the symbol to the table of if it already exists do nothing.
 */
-int getCodeSymbol(char* symbolName);
+void insertSymbol(char* name, int type);
 
 /*
-    Function that either adds the symbol to the table of if it already exists simply finds it.
-    In every case, we return the code of the symbol in the table.
+  Get string value of enum type
 */
-int findOrInsertSymbol(char* symbolName);
+char* getSymbolType(int type);
 
 /*
   Displays the symbols table

@@ -1,7 +1,9 @@
 #include "symbols_tab.h"
 
 int symbols_count;
-int symbols_capacity;
+int symbols_capacity = 10;
+
+enum type {int_val, bool_val, string_val, unit_val, array_val};
 
 typedef struct symbol {
   char* name;
@@ -53,11 +55,11 @@ void insertSymbol(char* name, int type){
 */
 char* getSymbolType(int type){
   switch(type){
-    int_val: return "integer";
-    bool_val: return "boolean";
-    string_val: return "string";
-    unit_val: return "unit";
-    array_val: return "array";
+    case int_val: return "integer";
+    case bool_val: return "boolean";
+    case string_val: return "string";
+    case unit_val: return "unit";
+    case array_val: return "array";
     default: return "unkown";
   }
 }
@@ -68,11 +70,12 @@ char* getSymbolType(int type){
 void display_symbols_table(FILE *returns){
   if (symbols_count > 0) {
     // Display table
-    fprintf(returns, "Index \t| Symbole \t| Type \n");
+    fprintf(returns, "%s \t| \t %s \t| %s \n", "Index", "Symbole", "Type");
+    fprintf(returns, "------------------------------------------- \n");
 
     int i;
     for (i = 1; i < symbols_count; i++) {
-      fprintf(returns, "%d \t| %s \t| %s \n", i, symbols_array[i]->name, getSymbolType(symbols_array[i]->type));
+      fprintf(returns, "%d \t| \t %s \t\t| %s \n", i, symbols_array[i]->name, getSymbolType(symbols_array[i]->type));
     }
 
     fprintf(returns, "\n");

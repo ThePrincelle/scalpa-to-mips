@@ -25,7 +25,7 @@ void insertSymbol(char* name, int type){
 
   // Search for the symbol in the table and return the code if it exists.
   int i;
-  for (i = 1; i < symbols_count; i++){
+  for (i = 0; i < symbols_count; i++){
       // For each symbol in the table, compare if it is the same as the input symbol.
       if (strcmp(symbols_array[i]->name, name) == 0){
         break; // Return the position of the symbol in the table
@@ -74,7 +74,7 @@ void display_symbols_table(FILE *returns){
     fprintf(returns, "------------------------------------------- \n");
 
     int i;
-    for (i = 1; i < symbols_count; i++) {
+    for (i = 0; i < symbols_count; i++) {
       fprintf(returns, "%d \t| \t %s \t\t| %s \n", i, symbols_array[i]->name, getSymbolType(symbols_array[i]->type));
     }
 

@@ -1,6 +1,5 @@
 #include "varArray.h"
 
-
 int arrays_count;
 int arrays_capacity = 10;
 int arrays_vars = 0;

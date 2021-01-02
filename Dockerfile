@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM ubuntu:20.04
 
 # Configure Timezone & tzdata
 ENV TZ=Europe/Paris

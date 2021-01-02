@@ -39,5 +39,9 @@ variable* getVar(char* varName);
 */
 variable* insertVar(char* varName, int context, int type, int array_nbvars);
 
+/*
+  Create a new variable object and return it.
+*/
 variable* newVar(char* varName, int context, int type, int array_nbvars);
+
 #endif

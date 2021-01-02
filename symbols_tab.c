@@ -4,8 +4,8 @@ int symbols_count;
 int symbols_capacity;
 char** symbols_array;
 
-/* 
-    Function that simply returns the code of the symbol given in the array of symbols. 
+/*
+    Function that simply returns the code of the symbol given in the array of symbols.
 */
 int getCodeSymbol(char* symbolName){
     int i;
@@ -47,4 +47,24 @@ int findOrInsertSymbol(char* symbolName){
 
     // Return the number of symbols in the array
     return symbols_count - 1;
+}
+
+/*
+  Displays the symbols table
+*/
+void display_symbols_table(FILE *returns){
+  if (symbols_count > 0) {
+    // Display table
+    fprintf(returns, "Index \t Symbole \t\n");
+
+    int i;
+    for (i = 1; i < symbols_count; i++) {
+      fprintf(returns, "%d \t %s \t\n", i, symbols_array[i]);
+    }
+
+    fprintf(returns, "\n");
+  }
+  else {
+    fprintf(returns, "No symbols found.\n");
+  }
 }

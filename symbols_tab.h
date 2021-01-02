@@ -5,8 +5,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* 
-    Function that simply returns the code of the symbol given in the array of symbols. 
+int symbols_capacity;
+char** symbols_array;
+
+/*
+    Function that simply returns the code of the symbol given in the array of symbols.
 */
 int getCodeSymbol(char* symbolName);
 
@@ -15,4 +18,10 @@ int getCodeSymbol(char* symbolName);
     In every case, we return the code of the symbol in the table.
 */
 int findOrInsertSymbol(char* symbolName);
+
+/*
+  Displays the symbols table
+*/
+void display_symbols_table(FILE *returns);
+
 #endif

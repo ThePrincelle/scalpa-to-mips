@@ -513,6 +513,10 @@ int main(int argc, char* argv[])
 {
   init();
 
+  // Initialise the array of symbols with a specified capacity.
+  symbols_capacity = 1000;
+  symbols_array = (char**)malloc(symbols_capacity*sizeof(char*));
+
   if (argc < 2) {
       fprintf(stderr, "Usage: %s [-version] [-o <out_file>] [-tos] file\n", argv[0]);
       exit(1);
@@ -584,6 +588,7 @@ int main(int argc, char* argv[])
   // Display table of symbols if wanted.
   if (t_symbols_display) {
     fprintf(stderr, "\n\n__Table des symboles__\n\n");
+    display_symbols_table(stderr);
   }
 
   fclose(yyin);

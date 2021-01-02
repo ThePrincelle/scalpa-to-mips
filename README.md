@@ -24,7 +24,7 @@ __Table of contents__
 
 ## Technologies used
 
-The compiler is made with the following languages:
+The compiler is made with the following languages and/or technologies:
 - Lex
 - Yacc
 - C
@@ -42,7 +42,7 @@ To enter the environnemnt, simply run this script :\
 
 > ⏰  Wait a little bit (depending on your internet connection) while the image is downloading and the environment is started and ready. You will be hosted by a bash console on the project directory.
 
-> 👉  Every modification made inside the environnement is automatically applied to the project on your host machine through the a Docker volume mounted to the project directory.
+> 👉  Every modification made inside the environnement is automatically applied to the project on your host machine through a Docker volume mounted to the project directory.
 
 
 ## Compile and run

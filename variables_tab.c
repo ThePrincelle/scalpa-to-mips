@@ -36,7 +36,7 @@ void vars_to_string(FILE *returns)
   
   if(vars_count == 0)
   {
-    fprintf(stderr, "\n\t--None--\n");
+    fprintf(stderr, "No variables found.\n\n");
   }
 
   int i;

@@ -20,7 +20,7 @@ void arrays_to_string(FILE *returns)
 
   if(arrays_count == 0)
   {
-    fprintf(stderr, "\n\t--None--\n");
+    fprintf(stderr, "No arrays found.\n\n");
   }
 
   int i,y;
@@ -52,6 +52,7 @@ void arrays_to_string(FILE *returns)
       snprintf(str_range,100,"%s",tmp_buff);
       fprintf(returns, "scalpavar: %s%s -- mipsvar: %d($sp) %d($sp)\n", act_array->scalpavar,str_range, act_array->p_memoire,nbvars*4);
   }
+  fprintf(returns, "\n");
 }
 
 /*

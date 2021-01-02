@@ -19,8 +19,9 @@ __Table of contents__
 - [Compile and run](#compile-and-run)
 - [Tests](#tests)
 - [Capabilities](#capabilities)
+- [Key features](#key-features)
+- [Missing features](#missing-features)
 - [Difficulties](#difficulties)
-- [Missing Features](#missing-features)
 
 ## Technologies used
 
@@ -95,11 +96,18 @@ Here are the capabilities of the compiler:
 - Display the table of symbols, variables and arrays.
 
 
+## Key features
+
+- 
+
+
+## Missing features
+
+- 
+
+
 ## Difficulties
 
--
+Ici, nous allons vous faire part de toutes les difficultés que nous avons rencontré tout le long du projet.
 
-
-## Missing Features
-
--
+- 

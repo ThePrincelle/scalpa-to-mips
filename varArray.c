@@ -16,27 +16,40 @@ void initArrayTab(){
 */
 void arrays_to_string(FILE *returns)
 {
-  int i,y;
 
+  if(arrays_count == 0)
+  {
+    fprintf(stderr, "\n\t--None--\n");
+  }
+
+  int i,y;
   for (i = 0; i < arrays_count; i++){
       // For each variable in the table, compare if it is the same as the input variable.
       varArray* current_array = arrays_array[i];
       variable* act_array = current_array->array;
-      variable** act_vars = current_array->vars;
       rangelist_type* currant_rangelist = current_array->range;
-      char* str_range = "[";
+      int nbvars = current_array->nbvars;
+
+      char str_range[100];
+      char tmp_buff[100];
+      bool first = true;
       while(currant_rangelist != NULL)
       {
-        snprintf(str_range,strlen(str_range),"%s,%d..%d",str_range,currant_rangelist->deb, currant_rangelist->fin);
+        if(first)
+        {
+           snprintf(tmp_buff,100,"[%d..%d",currant_rangelist->deb, currant_rangelist->fin);
+        }
+        else
+        {
+           snprintf(tmp_buff,100,"%s,%d..%d",str_range,currant_rangelist->deb, currant_rangelist->fin);
+        }
+        snprintf(str_range,100,"%s",tmp_buff);
         currant_rangelist = currant_rangelist->suivant;
+        first = false;
       }
-      snprintf(str_range,strlen(str_range),"%s]",str_range);
-      fprintf(returns, "scalpavar: %s%s -- mipsvar: %d($sp)\n", act_array->scalpavar,str_range, act_array->p_memoire);
-      for (y = 0; y < current_array->nbvars; y++)
-      {
-        variable* act_var = act_vars[i];
-        fprintf(returns, "mipsvar: %d($sp)\n", act_array->p_memoire);        
-      }
+      snprintf(tmp_buff,100,"%s]",str_range);
+      snprintf(str_range,100,"%s",tmp_buff);
+      fprintf(returns, "scalpavar: %s%s -- mipsvar: %d($sp) %d($sp)\n", act_array->scalpavar,str_range, act_array->p_memoire,nbvars*4);
   }
 }
 
@@ -58,7 +71,7 @@ varArray* getArray(char* varName){
 /*
   Function that returns the result of the insertion in the vars_array.
 */
-varArray* insertArray(char* varName, int context, arraytype_type* arraytype)
+varArray* insertArray(char* varName, int context, arraytype_type* arraytype, FILE *returns)
 {
     int type = arraytype->type;
     rangelist_type* rangelist = arraytype->rangelist;
@@ -72,24 +85,18 @@ varArray* insertArray(char* varName, int context, arraytype_type* arraytype)
     }
 
     rangelist_type* current_rangelist = rangelist;
-    while (rangelist != NULL)
+    while (current_rangelist != NULL)
     {
         nbvars *= current_rangelist->length;
         dim ++;
         current_rangelist = current_rangelist->suivant;
     }
 
-    int i;
-    variable** vars = (variable**)malloc(nbvars*sizeof(variable*));
-    for (i=0; i<nbvars;i++)
-    {
-        vars[i] = newVar("",context,type);
-    }
+    variable* array = insertVar(varName,context,5,nbvars-1);//type = array_val
 
-    varArray* new_array = malloc(sizeof(varArray*));
-    new_array->array = insertVar(varName,context,5);//type = array_val
+    varArray* new_array = malloc(sizeof(varArray));
+    new_array->array = array;
     new_array->range = rangelist;
-    new_array->vars = vars;
     new_array->dim = dim;
     new_array->nbvars = nbvars;
     new_array->type = type;

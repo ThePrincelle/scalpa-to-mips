@@ -37,7 +37,7 @@ variable* getVar(char* varName);
 /*
   Function that returns the result of the insertion in the vars_array.
 */
-variable* insertVar(char* varName, int context, int type);
+variable* insertVar(char* varName, int context, int type, int array_nbvars);
 
-variable* newVar(char* varName, int context, int type);
+variable* newVar(char* varName, int context, int type, int array_nbvars);
 #endif

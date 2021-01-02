@@ -2,6 +2,7 @@
 
 int vars_count;
 int vars_capacity = 10;
+int nextPos=0;
 
 variable** vars_array;
 
@@ -32,6 +33,12 @@ variable* getVar(char* varName){
 */
 void vars_to_string(FILE *returns)
 {
+  
+  if(vars_count == 0)
+  {
+    fprintf(stderr, "\n\t--None--\n");
+  }
+
   int i;
   for (i = 0; i < vars_count; i++){
       // For each variable in the table, compare if it is the same as the input variable.
@@ -44,7 +51,7 @@ void vars_to_string(FILE *returns)
 /*
   Function that returns the result of the insertion in the vars_array.
 */
-variable* insertVar(char* varName, int context, int type){
+variable* insertVar(char* varName, int context, int type, int array_nbvars){
     // Retrieve the variable position in the table.
     variable* old_var = getVar(varName);
 
@@ -57,29 +64,41 @@ variable* insertVar(char* varName, int context, int type){
         return false;
       }
     }
-    variable* new_var = newVar(varName, context, type);
+    variable* new_var;
+    
+    new_var = newVar(varName, context, type, array_nbvars);
+  
+     
     // Variable successfully added. Return true then.
     return new_var;
 }
 
-variable* newVar(char* varName, int context, int type)
+variable* newVar(char* varName, int context, int type, int array_nbvars)
 {
   // If we add the variable in the table, update the variable_capacity
     if (vars_count >= vars_capacity) {
         vars_capacity*=2;
         vars_array = (variable**)realloc(vars_array, vars_capacity * sizeof(variable*));
     }
+    
+  variable* new_var = malloc(sizeof(variable));
+  new_var->scalpavar = strdup(varName);
+  new_var->context = context;
+  new_var->type = type;
+  new_var->init = false;
+  new_var->p_memoire = nextPos;
 
-    variable* new_var = malloc(sizeof(variable*));
-    new_var->scalpavar = strdup(varName);
-    new_var->context = context;
-    new_var->type = type;
-    new_var->init = false;
-    new_var->p_memoire = 4 * (vars_count);
+  if(array_nbvars == 0)
+  {
+    nextPos +=4;
+  }
+  {
+    nextPos +=4 * array_nbvars;
+  }
 
 
-    vars_array[vars_count] = new_var;
-    vars_count++;
+  vars_array[vars_count] = new_var;
+  vars_count++;
 
-    return new_var;
+  return new_var;
 }

@@ -26,7 +26,6 @@ typedef struct arraytype_type{
 typedef struct varArray {
   variable* array;
   rangelist_type* range;
-  variable** vars;
   int dim;
   int nbvars;
   int type;
@@ -49,5 +48,5 @@ varArray* getArray(char* varName);
 /*
   Function that returns the result of the insertion in the vars_array.
 */
-varArray* insertArray(char* varName, int context, arraytype_type* arraytype);
+varArray* insertArray(char* varName, int context, arraytype_type* arraytype, FILE *returns);
 #endif

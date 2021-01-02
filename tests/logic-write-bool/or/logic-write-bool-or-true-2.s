@@ -4,10 +4,10 @@
 #	mainOnly
 main:
 
-	li $t1 1
-	li $t2 0
-	or $t1 $t1 $t2
-	move $a0 $t1
+	li $t0 1
+	li $t1 0
+	or $t0 $t0 $t1
+	move $a0 $t0
 	li $v0 1
 	syscall
 end:

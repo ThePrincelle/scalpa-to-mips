@@ -4,7 +4,7 @@
 #	mainOnly
 main:
 
-	li $t1 10
+	li $t0 10
 end:
 	li $v0 10
 	syscall

@@ -239,7 +239,7 @@ varsdecl : T_VAR identlist D_POINT atomictype                       {
                                                                         char varscalpa[100];
                                                                         snprintf(varscalpa,100,"%s",current_ident->ident);
 
-                                                                        variable* inserted = insertVar(varscalpa, size(contextes), $4,0);
+                                                                        variable* inserted = insertVar(varscalpa, curr_idx(contextes), $4,0);
 
                                                                         if(inserted == NULL)
                                                                         {
@@ -257,7 +257,7 @@ varsdecl : T_VAR identlist D_POINT atomictype                       {
                                                                         char varscalpa[100];
                                                                         snprintf(varscalpa,100,"%s",current_ident->ident);
 
-                                                                        varArray* inserted = insertArray(varscalpa, size(contextes), $4,stderr);
+                                                                        varArray* inserted = insertArray(varscalpa, curr_idx(contextes), $4,stderr);
 
                                                                         if(inserted == NULL)
                                                                         {
@@ -310,11 +310,11 @@ prog_instr : T_RETURN               {}
            | T_WRITE expr           {
                                      if ($2->type == int_val || $2->type == bool_val)
                                      {
-                                      fprintf(yyout,"\n\tmove $a0 $t%d\n\tli $v0 1\n\tsyscall", size(vars_temp_mips));
+                                      fprintf(yyout,"\n\tmove $a0 $t%d\n\tli $v0 1\n\tsyscall", curr_idx(vars_temp_mips));
                                      }
                                      else
                                      {
-                                      fprintf(yyout,"\n\tmove $a0 $t%d\n\tli $v0 4\n\tsyscall", size(vars_temp_mips));
+                                      fprintf(yyout,"\n\tmove $a0 $t%d\n\tli $v0 4\n\tsyscall", curr_idx(vars_temp_mips));
                                      }
                                      pop(vars_temp_mips);
                                     }
@@ -326,7 +326,7 @@ prog_instr : T_RETURN               {}
                                         yyerror("Syntax error (null ou init)");
                                       }
 
-                                      if ((int)var->context > size(contextes))
+                                      if ((int)var->context > curr_idx(contextes))
                                       {
                                         yyerror("Syntax error (context)");
                                       }
@@ -338,7 +338,7 @@ prog_instr : T_RETURN               {}
                                       var->init = true;
 
 
-                                      fprintf(yyout,"\n\tsw $t%d %d($sp)", size(vars_temp_mips), var->p_memoire);
+                                      fprintf(yyout,"\n\tsw $t%d %d($sp)", curr_idx(vars_temp_mips), var->p_memoire);
                                       pop(vars_temp_mips);
                                     }
 
@@ -351,7 +351,7 @@ prog_instr : T_RETURN               {}
                                                                 yyerror("Syntax error (null ou init)");
                                                               }
 
-                                                              if ((int)temp_var->context > size(contextes))
+                                                              if ((int)temp_var->context > curr_idx(contextes))
                                                               {
                                                                 yyerror("Syntax error (context)");
                                                               }
@@ -379,10 +379,10 @@ prog_instr : T_RETURN               {}
                                                               }
                                                               
                                                               int p_memoire = temp_var->p_memoire;
-                                                              push(vars_temp_mips, size(contextes));
-                                                              fprintf(yyout,"\n\tmove $t%d $t1",size(vars_temp_mips));
-                                                              fprintf(yyout,"\n\tmove $t1 $t%d",size(vars_temp_mips)-1);
-                                                              fprintf(yyout,"\n\tmove $t%d $t%d",size(vars_temp_mips)-1, size(vars_temp_mips));
+                                                              push(vars_temp_mips, curr_idx(contextes));
+                                                              fprintf(yyout,"\n\tmove $t%d $t1",curr_idx(vars_temp_mips));
+                                                              fprintf(yyout,"\n\tmove $t1 $t%d",curr_idx(vars_temp_mips)-1);
+                                                              fprintf(yyout,"\n\tmove $t%d $t%d",curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips));
                                                               pop(vars_temp_mips);
  
                                                               int lec_temp = 1; //@Todo: init to 0 after change size pile -1 
@@ -391,8 +391,8 @@ prog_instr : T_RETURN               {}
                                                                 int lec_pos = lec_temp;
                                                                 if(lec_temp == 1)//@Todo: 1 to 0 after change size pile -1 
                                                                 {
-                                                                  lec_pos = size(vars_temp_mips);
-                                                                  push(vars_temp_mips, size(contextes));
+                                                                  lec_pos = curr_idx(vars_temp_mips);
+                                                                  push(vars_temp_mips, curr_idx(contextes));
                                                                 }
                                                                 var* temp_expr = current_exprlist->expr;
                                                                 if(temp_expr->type != int_val)
@@ -404,26 +404,26 @@ prog_instr : T_RETURN               {}
                                                                   yyerror("Syntax error (read out array)");
                                                                 }
                                                                 
-                                                                fprintf(yyout,"\n\tli $t%d %d", size(vars_temp_mips),current_rangelist->fin);
-                                                                fprintf(yyout,"\n\tbgt $t%d $t%d error", lec_pos, size(vars_temp_mips));
+                                                                fprintf(yyout,"\n\tli $t%d %d", curr_idx(vars_temp_mips),current_rangelist->fin);
+                                                                fprintf(yyout,"\n\tbgt $t%d $t%d error", lec_pos, curr_idx(vars_temp_mips));
                                                                 
-                                                                fprintf(yyout,"\n\tli $t%d %d", size(vars_temp_mips),current_rangelist->deb);
-                                                                fprintf(yyout,"\n\tblt $t%d $t%d error", lec_pos, size(vars_temp_mips));
+                                                                fprintf(yyout,"\n\tli $t%d %d", curr_idx(vars_temp_mips),current_rangelist->deb);
+                                                                fprintf(yyout,"\n\tblt $t%d $t%d error", lec_pos, curr_idx(vars_temp_mips));
 
                                                                 if(lec_temp == 1)
                                                                 {
-                                                                  fprintf(yyout,"\n\tsub $t%d $t%d $t%d",size(vars_temp_mips)-1, lec_pos, size(vars_temp_mips));
-                                                                  push(vars_temp_mips, size(contextes));
-                                                                  fprintf(yyout,"\n\tmul $t%d $t%d %d\n", size(vars_temp_mips), size(vars_temp_mips)-2, current_rangelist->totLenght/current_rangelist->length);
+                                                                  fprintf(yyout,"\n\tsub $t%d $t%d $t%d",curr_idx(vars_temp_mips)-1, lec_pos, curr_idx(vars_temp_mips));
+                                                                  push(vars_temp_mips, curr_idx(contextes));
+                                                                  fprintf(yyout,"\n\tmul $t%d $t%d %d\n", curr_idx(vars_temp_mips), curr_idx(vars_temp_mips)-2, current_rangelist->totLenght/current_rangelist->length);
                                                                   pop(vars_temp_mips);
                                                                   fprintf(yyout,"\n");
                                                                 }
                                                                 else
                                                                 {
-                                                                  fprintf(yyout,"\n\tsub $t%d $t%d $t%d",size(vars_temp_mips), lec_pos, size(vars_temp_mips));
-                                                                  fprintf(yyout,"\n\tmul $t%d $t%d %d", size(vars_temp_mips), size(vars_temp_mips), current_rangelist->totLenght/current_rangelist->length);
-                                                                  push(vars_temp_mips, size(contextes));
-                                                                  fprintf(yyout,"\n\tadd $t%d $t%d $t%d\n",size(vars_temp_mips), size(vars_temp_mips)-1, size(vars_temp_mips));
+                                                                  fprintf(yyout,"\n\tsub $t%d $t%d $t%d",curr_idx(vars_temp_mips), lec_pos, curr_idx(vars_temp_mips));
+                                                                  fprintf(yyout,"\n\tmul $t%d $t%d %d", curr_idx(vars_temp_mips), curr_idx(vars_temp_mips), current_rangelist->totLenght/current_rangelist->length);
+                                                                  push(vars_temp_mips, curr_idx(contextes));
+                                                                  fprintf(yyout,"\n\tadd $t%d $t%d $t%d\n",curr_idx(vars_temp_mips), curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips));
                                                                   pop(vars_temp_mips);
                                                                 }
 
@@ -433,12 +433,12 @@ prog_instr : T_RETURN               {}
                                                               }
                                                               
                                                               temp_var->init = true;
-                                                              push(vars_temp_mips, size(contextes));
-                                                              fprintf(yyout,"\n\tli $t%d %d",size(vars_temp_mips)-lec_temp, p_memoire);
-                                                              fprintf(yyout,"\n\tadd $t%d $t%d $t%d", size(vars_temp_mips)-lec_temp, size(vars_temp_mips)-lec_temp,size(vars_temp_mips));
-                                                              fprintf(yyout,"\n\tmul $t%d $t%d   4", size(vars_temp_mips)-lec_temp, size(vars_temp_mips)-lec_temp);
-                                                              fprintf(yyout,"\n\tadd $t%d, $sp, $t%d", size(vars_temp_mips)-lec_temp, size(vars_temp_mips)-lec_temp);
-                                                              fprintf(yyout,"\n\tsw $t%d 0($t%d)", size(vars_temp_mips)-lec_temp-1, size(vars_temp_mips)-lec_temp);
+                                                              push(vars_temp_mips, curr_idx(contextes));
+                                                              fprintf(yyout,"\n\tli $t%d %d",curr_idx(vars_temp_mips)-lec_temp, p_memoire);
+                                                              fprintf(yyout,"\n\tadd $t%d $t%d $t%d", curr_idx(vars_temp_mips)-lec_temp, curr_idx(vars_temp_mips)-lec_temp,curr_idx(vars_temp_mips));
+                                                              fprintf(yyout,"\n\tmul $t%d $t%d   4", curr_idx(vars_temp_mips)-lec_temp, curr_idx(vars_temp_mips)-lec_temp);
+                                                              fprintf(yyout,"\n\tadd $t%d, $sp, $t%d", curr_idx(vars_temp_mips)-lec_temp, curr_idx(vars_temp_mips)-lec_temp);
+                                                              fprintf(yyout,"\n\tsw $t%d 0($t%d)", curr_idx(vars_temp_mips)-lec_temp-1, curr_idx(vars_temp_mips)-lec_temp);
                                                               pop(vars_temp_mips);
                                                               pop(vars_temp_mips);
 
@@ -469,13 +469,13 @@ expr : cte                      {
                                   $$=$1;
                                   if ($1->type == int_val || $1->type == bool_val)
                                   {
-                                    push(vars_temp_mips, size(contextes));
-                                    fprintf(yyout,"\n\tli $t%d %d",size(vars_temp_mips), atoi($1->val));
+                                    push(vars_temp_mips, curr_idx(contextes));
+                                    fprintf(yyout,"\n\tli $t%d %d",curr_idx(vars_temp_mips), atoi($1->val));
                                   }
                                   else
                                   {
-                                    push(vars_temp_mips, size(contextes));
-                                    fprintf(yyout,"\n\tli $t%d %s",size(vars_temp_mips) ,$1->val);
+                                    push(vars_temp_mips, curr_idx(contextes));
+                                    fprintf(yyout,"\n\tli $t%d %s",curr_idx(vars_temp_mips) ,$1->val);
                                   }
                                   $$->type = $1->type;
                                 }
@@ -486,7 +486,7 @@ expr : cte                      {
                                     $$=$2;
                                     if($2->type == int_val )
                                     {
-                                      fprintf(yyout,"\n\tmul $t%d $t%d -1\n\tmove $a0 $t6", size(vars_temp_mips), size(vars_temp_mips));
+                                      fprintf(yyout,"\n\tmul $t%d $t%d -1\n\tmove $a0 $t6", curr_idx(vars_temp_mips), curr_idx(vars_temp_mips));
                                       $$->type = int_val;
                                     }
                                     else
@@ -498,7 +498,7 @@ expr : cte                      {
                                   $$=$2;
                                   if($2->type == bool_val )
                                   {
-                                    fprintf(yyout,"\n\tseq $t%d $t%d $zero\n\tmove $a0 $t6", size(vars_temp_mips), size(vars_temp_mips));
+                                    fprintf(yyout,"\n\tseq $t%d $t%d $zero\n\tmove $a0 $t6", curr_idx(vars_temp_mips), curr_idx(vars_temp_mips));
                                     $$->type = bool_val;
                                   }
                                   else
@@ -510,7 +510,7 @@ expr : cte                      {
                                     $$=$1;
                                     if ($1->type == int_val && $3->type == int_val)
                                     {
-                                      fprintf(yyout,"\n\tadd $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
+                                      fprintf(yyout,"\n\tadd $t%d $t%d $t%d", curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips));
                                       pop(vars_temp_mips);
                                       $$->type = int_val;
                                     }
@@ -523,7 +523,7 @@ expr : cte                      {
                                     $$=$1;
                                     if ($1->type == int_val && $3->type == int_val)
                                     {
-                                      fprintf(yyout,"\n\tsub $t%d $t%d $t%d",size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
+                                      fprintf(yyout,"\n\tsub $t%d $t%d $t%d",curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips));
                                       pop(vars_temp_mips);
                                       $$->type = int_val;
                                     }
@@ -536,7 +536,7 @@ expr : cte                      {
                                     $$=$1;
                                     if ($1->type == int_val && $3->type == int_val)
                                       {
-                                        fprintf(yyout,"\n\tmul $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
+                                        fprintf(yyout,"\n\tmul $t%d $t%d $t%d", curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips));
                                         pop(vars_temp_mips);
                                         $$->type = int_val;
                                       }
@@ -549,7 +549,7 @@ expr : cte                      {
                                     $$=$1;
                                     if ($1->type == int_val && $3->type == int_val)
                                       {
-                                        fprintf(yyout,"\n\tdiv $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
+                                        fprintf(yyout,"\n\tdiv $t%d $t%d $t%d", curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips));
                                         pop(vars_temp_mips);
                                         $$->type = int_val;
                                       }
@@ -567,7 +567,7 @@ expr : cte                      {
                                         pow_exist = true;
                                       }
                                       char* code = "\n\tmove $a2 $t%d\n\tmove $a3 $t%d\n\tmove $t8 $a2\n\tjal pow\n\tmove $t%d $t8";
-                                      fprintf(yyout,code, size(vars_temp_mips)-1, size(vars_temp_mips), size(vars_temp_mips)-1);
+                                      fprintf(yyout,code, curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips), curr_idx(vars_temp_mips)-1);
                                       pop(vars_temp_mips);
                                       $$->type = int_val;
                                     }
@@ -580,7 +580,7 @@ expr : cte                      {
                                     $$=$1;
                                     if ($1->type == int_val && $3->type == int_val)
                                     {
-                                      fprintf(yyout,"\n\tsle $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
+                                      fprintf(yyout,"\n\tsle $t%d $t%d $t%d", curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips));
                                       pop(vars_temp_mips);
                                       $$->type = bool_val;
                                     }
@@ -593,7 +593,7 @@ expr : cte                      {
                                     $$=$1;
                                     if ($1->type == int_val && $3->type == int_val)
                                     {
-                                      fprintf(yyout,"\n\tslt $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
+                                      fprintf(yyout,"\n\tslt $t%d $t%d $t%d", curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips));
                                       pop(vars_temp_mips);
                                       $$->type = bool_val;
                                     }
@@ -606,7 +606,7 @@ expr : cte                      {
                                     $$=$1;
                                     if ($1->type == int_val && $3->type == int_val)
                                     {
-                                      fprintf(yyout,"\n\tsge $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
+                                      fprintf(yyout,"\n\tsge $t%d $t%d $t%d", curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips));
                                       pop(vars_temp_mips);
                                       $$->type = bool_val;
                                     }
@@ -619,7 +619,7 @@ expr : cte                      {
                                     $$=$1;
                                     if ($1->type == int_val && $3->type == int_val)
                                     {
-                                      fprintf(yyout,"\n\tsgt $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
+                                      fprintf(yyout,"\n\tsgt $t%d $t%d $t%d", curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips));
                                       pop(vars_temp_mips);
                                       $$->type = bool_val;
                                     }
@@ -632,7 +632,7 @@ expr : cte                      {
                                   $$=$1;
                                   if (($1->type == int_val || $1->type == bool_val) && $1->type == $3->type )
                                   {
-                                    fprintf(yyout,"\n\tseq $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
+                                    fprintf(yyout,"\n\tseq $t%d $t%d $t%d", curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips));
                                     pop(vars_temp_mips);
                                     $$->type = $1->type;
                                   }
@@ -645,7 +645,7 @@ expr : cte                      {
                                   $$=$1;
                                   if (($1->type == int_val || $1->type == bool_val) && $1->type == $3->type )
                                   {
-                                    fprintf(yyout,"\n\tsne $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
+                                    fprintf(yyout,"\n\tsne $t%d $t%d $t%d", curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips));
                                     pop(vars_temp_mips);
                                     $$->type = $1->type;
                                   }
@@ -658,7 +658,7 @@ expr : cte                      {
                                   $$=$1;
                                   if ($1->type == bool_val && $3->type == bool_val)
                                   {
-                                    fprintf(yyout,"\n\tand $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
+                                    fprintf(yyout,"\n\tand $t%d $t%d $t%d", curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips));
                                     pop(vars_temp_mips);
                                     $$->type = bool_val;
                                   }
@@ -672,7 +672,7 @@ expr : cte                      {
                                   $$=$1;
                                   if ($1->type == bool_val && $3->type == bool_val)
                                   {
-                                    fprintf(yyout,"\n\tor $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
+                                    fprintf(yyout,"\n\tor $t%d $t%d $t%d", curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips));
                                     pop(vars_temp_mips);
                                     $$->type = bool_val;
                                   }
@@ -685,7 +685,7 @@ expr : cte                      {
                                   $$=$1;
                                   if ($1->type == bool_val && $3->type == bool_val)
                                   {
-                                    fprintf(yyout,"\n\txor $t%d $t%d $t%d", size(vars_temp_mips)-1, size(vars_temp_mips)-1, size(vars_temp_mips));
+                                    fprintf(yyout,"\n\txor $t%d $t%d $t%d", curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips));
                                     pop(vars_temp_mips);
                                     $$->type = bool_val;
                                   }
@@ -703,12 +703,12 @@ expr : cte                      {
                                     yyerror("Syntax error (NULL ou init)");
                                   }
 
-                                  if ((int)var->context > size(contextes))
+                                  if ((int)var->context > curr_idx(contextes))
                                   {
                                     yyerror("Syntax error (context)");
                                   }
-                                  push(vars_temp_mips, size(contextes));
-                                  fprintf(yyout,"\n\tlw $t%d %d($sp)", size(vars_temp_mips),var->p_memoire);
+                                  push(vars_temp_mips, curr_idx(contextes));
+                                  fprintf(yyout,"\n\tlw $t%d %d($sp)", curr_idx(vars_temp_mips),var->p_memoire);
                                   $$->type = var->type;
                                 }
 
@@ -722,7 +722,7 @@ expr : cte                      {
                                                 yyerror("Syntax error (NULL ou init)");
                                               }
 
-                                              if ((int)temp_var->context > size(contextes))
+                                              if ((int)temp_var->context > curr_idx(contextes))
                                               {
                                                 yyerror("Syntax error (context)");
                                               }
@@ -750,7 +750,7 @@ expr : cte                      {
                                               {
                                                 if(lec_temp == 1)//@Todo: 1 to 0 after change size pile -1 
                                                 {
-                                                  push(vars_temp_mips, size(contextes));
+                                                  push(vars_temp_mips, curr_idx(contextes));
                                                 }
                                                 var* temp_expr = current_exprlist->expr;
                                                 if(temp_expr->type != int_val)
@@ -763,24 +763,24 @@ expr : cte                      {
                                                 }
                                                 
                                                
-                                                fprintf(yyout,"\n\tli $t%d %d", size(vars_temp_mips),current_rangelist->fin);
-                                                fprintf(yyout,"\n\tbgt $t%d $t%d error", lec_temp, size(vars_temp_mips));
+                                                fprintf(yyout,"\n\tli $t%d %d", curr_idx(vars_temp_mips),current_rangelist->fin);
+                                                fprintf(yyout,"\n\tbgt $t%d $t%d error", lec_temp, curr_idx(vars_temp_mips));
                                                 
-                                                fprintf(yyout,"\n\tli $t%d %d", size(vars_temp_mips),current_rangelist->deb);
-                                                fprintf(yyout,"\n\tblt $t%d $t%d error", lec_temp, size(vars_temp_mips));
-                                                fprintf(yyout,"\n\tsub $t%d $t%d $t%d",size(vars_temp_mips), lec_temp, size(vars_temp_mips));
+                                                fprintf(yyout,"\n\tli $t%d %d", curr_idx(vars_temp_mips),current_rangelist->deb);
+                                                fprintf(yyout,"\n\tblt $t%d $t%d error", lec_temp, curr_idx(vars_temp_mips));
+                                                fprintf(yyout,"\n\tsub $t%d $t%d $t%d",curr_idx(vars_temp_mips), lec_temp, curr_idx(vars_temp_mips));
                                                 if(lec_temp == 1)
                                                 {
-                                                  push(vars_temp_mips, size(contextes));
-                                                  fprintf(yyout,"\n\tmul $t%d $t%d %d\n", size(vars_temp_mips), size(vars_temp_mips)-2,  current_rangelist->totLenght/current_rangelist->length);
+                                                  push(vars_temp_mips, curr_idx(contextes));
+                                                  fprintf(yyout,"\n\tmul $t%d $t%d %d\n", curr_idx(vars_temp_mips), curr_idx(vars_temp_mips)-2,  current_rangelist->totLenght/current_rangelist->length);
                                                   pop(vars_temp_mips);
                                                   fprintf(yyout,"\n");
                                                 }
                                                 else
                                                 {
-                                                  fprintf(yyout,"\n\tmul $t%d $t%d %d", size(vars_temp_mips), size(vars_temp_mips),  current_rangelist->totLenght/current_rangelist->length);
-                                                   push(vars_temp_mips, size(contextes));
-                                                  fprintf(yyout,"\n\tadd $t%d $t%d $t%d\n",size(vars_temp_mips), size(vars_temp_mips)-1, size(vars_temp_mips));
+                                                  fprintf(yyout,"\n\tmul $t%d $t%d %d", curr_idx(vars_temp_mips), curr_idx(vars_temp_mips),  current_rangelist->totLenght/current_rangelist->length);
+                                                   push(vars_temp_mips, curr_idx(contextes));
+                                                  fprintf(yyout,"\n\tadd $t%d $t%d $t%d\n",curr_idx(vars_temp_mips), curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips));
                                                   pop(vars_temp_mips);
                                                 }
 
@@ -791,12 +791,12 @@ expr : cte                      {
                                               
                                               temp_var->init = true;
 
-                                              push(vars_temp_mips, size(contextes));
-                                              fprintf(yyout,"\n\tli $t%d %d",size(vars_temp_mips)-lec_temp, p_memoire);
-                                              fprintf(yyout,"\n\tadd $t%d $t%d $t%d", size(vars_temp_mips)-lec_temp+1, size(vars_temp_mips)-lec_temp,size(vars_temp_mips));
-                                              fprintf(yyout,"\n\tmul $t%d $t%d   4", size(vars_temp_mips)-lec_temp+1, size(vars_temp_mips)-lec_temp+1);
-                                              fprintf(yyout,"\n\tadd $t%d, $sp, $t%d", size(vars_temp_mips)-lec_temp+1, size(vars_temp_mips)-lec_temp+1);
-                                              fprintf(yyout,"\n\tlw $t%d 0($t%d)", size(vars_temp_mips)-lec_temp, size(vars_temp_mips)-lec_temp+1);
+                                              push(vars_temp_mips, curr_idx(contextes));
+                                              fprintf(yyout,"\n\tli $t%d %d",curr_idx(vars_temp_mips)-lec_temp, p_memoire);
+                                              fprintf(yyout,"\n\tadd $t%d $t%d $t%d", curr_idx(vars_temp_mips)-lec_temp+1, curr_idx(vars_temp_mips)-lec_temp,curr_idx(vars_temp_mips));
+                                              fprintf(yyout,"\n\tmul $t%d $t%d   4", curr_idx(vars_temp_mips)-lec_temp+1, curr_idx(vars_temp_mips)-lec_temp+1);
+                                              fprintf(yyout,"\n\tadd $t%d, $sp, $t%d", curr_idx(vars_temp_mips)-lec_temp+1, curr_idx(vars_temp_mips)-lec_temp+1);
+                                              fprintf(yyout,"\n\tlw $t%d 0($t%d)", curr_idx(vars_temp_mips)-lec_temp, curr_idx(vars_temp_mips)-lec_temp+1);
 
                                               int i;
                                               for(i = lec_temp; i>0; i--)

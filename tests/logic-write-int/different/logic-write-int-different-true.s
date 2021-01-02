@@ -4,11 +4,11 @@
 #	mainOnly
 main:
 
-	li $t1 1
-	li $t2 2
+	li $t0 1
+	li $t1 2
 
-	sne $t1 $t1 $t2
-	move $a0 $t1
+	sne $t0 $t0 $t1
+	move $a0 $t0
 	li $v0 1
 	syscall
 end:

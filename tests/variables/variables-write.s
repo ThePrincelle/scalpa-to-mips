@@ -8,35 +8,35 @@ main:
 
 	addi $sp, $sp, -16
 
-	li $t1 10
-	sw $t1 8($sp)
+	li $t0 10
+	sw $t0 8($sp)
 
-	li $t1 1
-	sw $t1 12($sp)
+	li $t0 1
+	sw $t0 12($sp)
 
-	li $t1 8
-	sw $t1 4($sp)
+	li $t0 8
+	sw $t0 4($sp)
 
-	li $t1 2
-	sw $t1 0($sp)
+	li $t0 2
+	sw $t0 0($sp)
 
-	lw $t1 0($sp)
-	move $a0 $t1
+	lw $t0 0($sp)
+	move $a0 $t0
 	li $v0 1
 	syscall
 
-	lw $t1 4($sp)
-	move $a0 $t1
+	lw $t0 4($sp)
+	move $a0 $t0
 	li $v0 1
 	syscall
 
-	lw $t1 8($sp)
-	move $a0 $t1
+	lw $t0 8($sp)
+	move $a0 $t0
 	li $v0 1
 	syscall
 
-	lw $t1 12($sp)
-	move $a0 $t1
+	lw $t0 12($sp)
+	move $a0 $t0
 	li $v0 1
 	syscall
 

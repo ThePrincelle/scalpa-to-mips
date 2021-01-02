@@ -4,8 +4,8 @@
 #	mainOnly
 main:
 
-	li $t1 0
-	move $a0 $t1
+	li $t0 0
+	move $a0 $t0
 	li $v0 1
 	syscall
 end:

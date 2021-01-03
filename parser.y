@@ -380,16 +380,16 @@ prog_instr : T_RETURN               {}
                                                               
                                                               int p_memoire = temp_var->p_memoire;
                                                               push(vars_temp_mips, curr_idx(contextes));
-                                                              fprintf(yyout,"\n\tmove $t%d $t1",curr_idx(vars_temp_mips));
-                                                              fprintf(yyout,"\n\tmove $t1 $t%d",curr_idx(vars_temp_mips)-1);
+                                                              fprintf(yyout,"\n\tmove $t%d $t0",curr_idx(vars_temp_mips));
+                                                              fprintf(yyout,"\n\tmove $t0 $t%d",curr_idx(vars_temp_mips)-1);
                                                               fprintf(yyout,"\n\tmove $t%d $t%d",curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips));
                                                               pop(vars_temp_mips);
  
-                                                              int lec_temp = 1; //@Todo: init to 0 after change size pile -1 
+                                                              int lec_temp = 0;
                                                               while(current_exprlist != NULL)
                                                               {
                                                                 int lec_pos = lec_temp;
-                                                                if(lec_temp == 1)//@Todo: 1 to 0 after change size pile -1 
+                                                                if(lec_temp == 0)
                                                                 {
                                                                   lec_pos = curr_idx(vars_temp_mips);
                                                                   push(vars_temp_mips, curr_idx(contextes));
@@ -410,7 +410,7 @@ prog_instr : T_RETURN               {}
                                                                 fprintf(yyout,"\n\tli $t%d %d", curr_idx(vars_temp_mips),current_rangelist->deb);
                                                                 fprintf(yyout,"\n\tblt $t%d $t%d error", lec_pos, curr_idx(vars_temp_mips));
 
-                                                                if(lec_temp == 1)
+                                                                if(lec_temp == 0)
                                                                 {
                                                                   fprintf(yyout,"\n\tsub $t%d $t%d $t%d",curr_idx(vars_temp_mips)-1, lec_pos, curr_idx(vars_temp_mips));
                                                                   push(vars_temp_mips, curr_idx(contextes));
@@ -433,17 +433,15 @@ prog_instr : T_RETURN               {}
                                                               }
                                                               
                                                               temp_var->init = true;
-                                                              push(vars_temp_mips, curr_idx(contextes));
                                                               fprintf(yyout,"\n\tli $t%d %d",curr_idx(vars_temp_mips)-lec_temp, p_memoire);
-                                                              fprintf(yyout,"\n\tadd $t%d $t%d $t%d", curr_idx(vars_temp_mips)-lec_temp, curr_idx(vars_temp_mips)-lec_temp,curr_idx(vars_temp_mips));
+                                                              fprintf(yyout,"\n\tadd $t%d $t%d $t%d", curr_idx(vars_temp_mips)-lec_temp, curr_idx(vars_temp_mips)-lec_temp,curr_idx(vars_temp_mips)+1);
                                                               fprintf(yyout,"\n\tmul $t%d $t%d   4", curr_idx(vars_temp_mips)-lec_temp, curr_idx(vars_temp_mips)-lec_temp);
                                                               fprintf(yyout,"\n\tadd $t%d, $sp, $t%d", curr_idx(vars_temp_mips)-lec_temp, curr_idx(vars_temp_mips)-lec_temp);
                                                               fprintf(yyout,"\n\tsw $t%d 0($t%d)", curr_idx(vars_temp_mips)-lec_temp-1, curr_idx(vars_temp_mips)-lec_temp);
                                                               pop(vars_temp_mips);
-                                                              pop(vars_temp_mips);
 
                                                               int i;
-                                                              for(i = lec_temp; i>0; i--)
+                                                              for(i = lec_temp; i>-1; i--)
                                                               {
                                                                 pop(vars_temp_mips);
                                                               }
@@ -745,10 +743,10 @@ expr : cte                      {
                                               }
 
                                               int p_memoire = temp_var->p_memoire;
-                                              int lec_temp = 1; //@Todo: init to 0 after change size pile -1 
+                                              int lec_temp = 0;
                                               while(current_exprlist != NULL)
                                               {
-                                                if(lec_temp == 1)//@Todo: 1 to 0 after change size pile -1 
+                                                if(lec_temp == 0)
                                                 {
                                                   push(vars_temp_mips, curr_idx(contextes));
                                                 }
@@ -769,7 +767,7 @@ expr : cte                      {
                                                 fprintf(yyout,"\n\tli $t%d %d", curr_idx(vars_temp_mips),current_rangelist->deb);
                                                 fprintf(yyout,"\n\tblt $t%d $t%d error", lec_temp, curr_idx(vars_temp_mips));
                                                 fprintf(yyout,"\n\tsub $t%d $t%d $t%d",curr_idx(vars_temp_mips), lec_temp, curr_idx(vars_temp_mips));
-                                                if(lec_temp == 1)
+                                                if(lec_temp == 0)
                                                 {
                                                   push(vars_temp_mips, curr_idx(contextes));
                                                   fprintf(yyout,"\n\tmul $t%d $t%d %d\n", curr_idx(vars_temp_mips), curr_idx(vars_temp_mips)-2,  current_rangelist->totLenght/current_rangelist->length);
@@ -791,12 +789,11 @@ expr : cte                      {
                                               
                                               temp_var->init = true;
 
-                                              push(vars_temp_mips, curr_idx(contextes));
                                               fprintf(yyout,"\n\tli $t%d %d",curr_idx(vars_temp_mips)-lec_temp, p_memoire);
-                                              fprintf(yyout,"\n\tadd $t%d $t%d $t%d", curr_idx(vars_temp_mips)-lec_temp+1, curr_idx(vars_temp_mips)-lec_temp,curr_idx(vars_temp_mips));
-                                              fprintf(yyout,"\n\tmul $t%d $t%d   4", curr_idx(vars_temp_mips)-lec_temp+1, curr_idx(vars_temp_mips)-lec_temp+1);
-                                              fprintf(yyout,"\n\tadd $t%d, $sp, $t%d", curr_idx(vars_temp_mips)-lec_temp+1, curr_idx(vars_temp_mips)-lec_temp+1);
-                                              fprintf(yyout,"\n\tlw $t%d 0($t%d)", curr_idx(vars_temp_mips)-lec_temp, curr_idx(vars_temp_mips)-lec_temp+1);
+                                              fprintf(yyout,"\n\tadd $t%d $t%d $t%d", curr_idx(vars_temp_mips)-lec_temp, curr_idx(vars_temp_mips)-lec_temp,curr_idx(vars_temp_mips)+1);
+                                              fprintf(yyout,"\n\tmul $t%d $t%d   4", curr_idx(vars_temp_mips)-lec_temp, curr_idx(vars_temp_mips)-lec_temp);
+                                              fprintf(yyout,"\n\tadd $t%d, $sp, $t%d", curr_idx(vars_temp_mips)-lec_temp, curr_idx(vars_temp_mips)-lec_temp);
+                                              fprintf(yyout,"\n\tlw $t%d 0($t%d)", curr_idx(vars_temp_mips)-lec_temp, curr_idx(vars_temp_mips)-lec_temp);
 
                                               int i;
                                               for(i = lec_temp; i>0; i--)

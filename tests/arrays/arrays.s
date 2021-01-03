@@ -12,8 +12,8 @@ main:
 	li $t0 -3
 	li $t1 1
 	li $t2 10
-	move $t3 $t1
-	move $t1 $t2
+	move $t3 $t0
+	move $t0 $t2
 	move $t2 $t3
 	li $t3 -3
 	bgt $t2 $t3 error
@@ -24,10 +24,10 @@ main:
 
 
 	li $t3 100
-	bgt $t2 $t3 error
+	bgt $t1 $t3 error
 	li $t3 1
-	blt $t2 $t3 error
-	sub $t3 $t2 $t3
+	blt $t1 $t3 error
+	sub $t3 $t1 $t3
 	mul $t3 $t3 1
 	add $t4 $t3 $t4
 
@@ -40,26 +40,26 @@ main:
 	li $t0 -3
 	li $t1 1
 	li $t2 -3
-	bgt $t1 $t2 error
+	bgt $t0 $t2 error
 	li $t2 -4
-	blt $t1 $t2 error
-	sub $t2 $t1 $t2
+	blt $t0 $t2 error
+	sub $t2 $t0 $t2
 	mul $t3 $t1 100
 
 
 	li $t2 100
-	bgt $t2 $t2 error
+	bgt $t1 $t2 error
 	li $t2 1
-	blt $t2 $t2 error
-	sub $t2 $t2 $t2
+	blt $t1 $t2 error
+	sub $t2 $t1 $t2
 	mul $t2 $t2 1
 	add $t3 $t2 $t3
 
 	li $t0 4
-	add $t1 $t0 $t3
-	mul $t1 $t1   4
-	add $t1, $sp, $t1
-	lw $t0 0($t1)
+	add $t0 $t0 $t3
+	mul $t0 $t0   4
+	add $t0, $sp, $t0
+	lw $t0 0($t0)
 	move $a0 $t0
 	li $v0 1
 	syscall

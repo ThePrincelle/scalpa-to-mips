@@ -199,7 +199,7 @@
 %start program
 
 //Main
-%token T_PROGRAM T_IDENT T_RETURN T_WRITE T_INTEGER T_BOOLEAN T_BEGIN T_END T_STRING T_PAROUV T_PARFER T_VAR T_BRAOUV T_BRAFER SEMICOLON D_POINT COMMA T_UNIT T_ARRAY T_INT T_BOOL T_OF PP ASSIGN
+%token T_PROGRAM T_IDENT T_RETURN T_WRITE T_INTEGER T_BOOLEAN T_BEGIN T_END T_STRING T_PAROUV T_PARFER T_VAR T_BRAOUV T_BRAFER SEMICOLON D_POINT COMMA T_UNIT T_ARRAY T_INT T_BOOL T_OF PP ASSIGN T_READ
 
 // Operators
 %token T_MINUS T_PLUS T_MULT T_POW
@@ -318,6 +318,147 @@ prog_instr : T_RETURN               {}
                                      }
                                      pop(vars_temp_mips);
                                     }
+           | T_READ T_IDENT          {
+                                        variable* temp_var = getVar($2);
+
+                                        if (temp_var == NULL )
+                                        {
+                                          yyerror("Syntax error (null ou init)");
+                                        }
+
+                                        if ((int)temp_var->context > size(contextes))
+                                        {
+                                          yyerror("Syntax error (context)");
+                                        }
+
+                                        if(temp_var->type != bool_val && temp_var->type != int_val)
+                                        {
+                                          yyerror("Syntax error (read)");
+                                        }
+                                        
+                                        fprintf(yyout,"\n\tla $a0 readMessage\n\tli $v0 4\n\tsyscall");
+                                        fprintf(yyout,"\n\tli $v0 5\n\tsyscall");
+
+                                        if(temp_var->type == bool_val)
+                                        {
+                                          fprintf(yyout,"\n\tbgt $v0 1 error");
+                                        }
+
+                                        push(vars_temp_mips, size(contextes));
+                                        fprintf(yyout,"\n\tmove $t%d $v0", curr_idx(vars_temp_mips));
+                                        fprintf(yyout,"\n\tsw $t%d %d($sp)", curr_idx(vars_temp_mips),temp_var->p_memoire);
+                                        pop(vars_temp_mips);
+
+                                        temp_var->init = true;
+                                     }
+           | T_READ T_IDENT T_BRAOUV exprlist T_BRAFER         {
+                                                                  varArray* temp_array = getArray($2);
+                                                                  variable* temp_var = temp_array->array;
+
+                                                                  if (temp_var == NULL )
+                                                                  {
+                                                                    yyerror("Syntax error (null ou init)");
+                                                                  }
+
+                                                                  if ((int)temp_var->context > size(contextes))
+                                                                  {
+                                                                    yyerror("Syntax error (context)");
+                                                                  }
+
+                                                                  if(temp_array->type != bool_val && temp_array->type != int_val)
+                                                                  {
+                                                                    yyerror("Syntax error (read)");
+                                                                  }
+
+                                                                  rangelist_type* current_rangelist = temp_array->range;
+                                                                  if(current_rangelist == NULL)
+                                                                  {
+                                                                    yyerror("Syntax error (current_rangelist)");
+                                                                  }
+                                                                  
+                                                                  exprlist_type* current_exprlist = $4;
+                                                                  if(current_exprlist==NULL)
+                                                                  {
+                                                                    yyerror("Syntax error (exprlist)");
+                                                                  }
+
+                                                                  if(current_exprlist->nbelement < temp_array->dim )
+                                                                  {
+                                                                    yyerror("Syntax error (dim)");
+                                                                  }
+                                                                  
+                                                                  fprintf(yyout,"\n\tla $a0 readMessage\n\tli $v0 4\n\tsyscall");
+                                                                  fprintf(yyout,"\n\tli $v0 5\n\tsyscall");
+
+                                                                  if(temp_var->type == bool_val)
+                                                                  {
+                                                                    fprintf(yyout,"\n\tbgt $v0 1 error");
+                                                                  }
+
+                                                                  push(vars_temp_mips, size(contextes));
+                                                                  fprintf(yyout,"\n\tmove $t%d $v0", curr_idx(vars_temp_mips));
+                                                                  int p_memoire = temp_var->p_memoire;
+                                                                  int lec_temp = 0;
+                                                                  while(current_exprlist != NULL)
+                                                                  {
+                                                                    if(lec_temp == 0)
+                                                                    {
+                                                                      push(vars_temp_mips, size(contextes));
+                                                                    }
+                                                                    var* temp_expr = current_exprlist->expr;
+                                                                    if(temp_expr->type != int_val)
+                                                                    {
+                                                                      yyerror("Syntax error (type array)");
+                                                                    }
+                                                                    if(current_rangelist == NULL)
+                                                                    {
+                                                                      yyerror("Syntax error (read out array)");
+                                                                    }
+                                                                    
+                                                                  
+                                                                    fprintf(yyout,"\n\tli $t%d %d", curr_idx(vars_temp_mips),current_rangelist->fin);
+                                                                    fprintf(yyout,"\n\tbgt $t%d $t%d error", lec_temp, curr_idx(vars_temp_mips));
+                                                                    
+                                                                    fprintf(yyout,"\n\tli $t%d %d", curr_idx(vars_temp_mips),current_rangelist->deb);
+                                                                    fprintf(yyout,"\n\tblt $t%d $t%d error", lec_temp, curr_idx(vars_temp_mips));
+                                                                    fprintf(yyout,"\n\tsub $t%d $t%d $t%d",curr_idx(vars_temp_mips), lec_temp, curr_idx(vars_temp_mips));
+                                                                    if(lec_temp == 0)
+                                                                    {
+                                                                      push(vars_temp_mips, size(contextes));
+                                                                      fprintf(yyout,"\n\tmul $t%d $t%d %d\n", curr_idx(vars_temp_mips), curr_idx(vars_temp_mips)-1,  current_rangelist->totLenght/current_rangelist->length);
+                                                                      pop(vars_temp_mips);
+                                                                      fprintf(yyout,"\n");
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                      fprintf(yyout,"\n\tmul $t%d $t%d %d", curr_idx(vars_temp_mips), curr_idx(vars_temp_mips),  current_rangelist->totLenght/current_rangelist->length);
+                                                                      push(vars_temp_mips, size(contextes));
+                                                                      fprintf(yyout,"\n\tadd $t%d $t%d $t%d\n",curr_idx(vars_temp_mips), curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips));
+                                                                      pop(vars_temp_mips);
+                                                                    }
+
+                                                                    current_exprlist=current_exprlist->suivant;
+                                                                    current_rangelist = current_rangelist->suivant;
+                                                                    lec_temp++;
+                                                                  }
+                                                                  
+                                                                  fprintf(yyout,"\n\tli $t%d %d",curr_idx(vars_temp_mips)-(lec_temp+1), p_memoire);
+                                                                  fprintf(yyout,"\n\tadd $t%d $t%d $t%d", curr_idx(vars_temp_mips)-(lec_temp+1), curr_idx(vars_temp_mips)-(lec_temp+1),curr_idx(vars_temp_mips)+1);
+                                                                  fprintf(yyout,"\n\tmul $t%d $t%d   4", curr_idx(vars_temp_mips)-(lec_temp+1), curr_idx(vars_temp_mips)-(lec_temp+1));
+                                                                  fprintf(yyout,"\n\tadd $t%d, $sp, $t%d", curr_idx(vars_temp_mips)-(lec_temp+1), curr_idx(vars_temp_mips)-(lec_temp+1));
+                                                                  fprintf(yyout,"\n\tsw $t%d 0($t%d)", curr_idx(vars_temp_mips)-(lec_temp-1), curr_idx(vars_temp_mips)-(lec_temp+1));
+                                                                  pop(vars_temp_mips);
+                                                                  pop(vars_temp_mips);
+
+                                                                  int i;
+                                                                  for(i = lec_temp; i>0; i--)
+                                                                  {
+                                                                    pop(vars_temp_mips);
+                                                                  }
+
+                                                                  temp_var->init = true;
+                                                                  
+                                                               }
            | T_IDENT ASSIGN expr    {
                                       struct variable* var = getVar($1);
 
@@ -432,7 +573,6 @@ prog_instr : T_RETURN               {}
                                                                 lec_temp++;
                                                               }
                                                               
-                                                              temp_var->init = true;
                                                               fprintf(yyout,"\n\tli $t%d %d",curr_idx(vars_temp_mips)-lec_temp, p_memoire);
                                                               fprintf(yyout,"\n\tadd $t%d $t%d $t%d", curr_idx(vars_temp_mips)-lec_temp, curr_idx(vars_temp_mips)-lec_temp,curr_idx(vars_temp_mips)+1);
                                                               fprintf(yyout,"\n\tmul $t%d $t%d   4", curr_idx(vars_temp_mips)-lec_temp, curr_idx(vars_temp_mips)-lec_temp);
@@ -445,6 +585,8 @@ prog_instr : T_RETURN               {}
                                                               {
                                                                 pop(vars_temp_mips);
                                                               }
+
+                                                              temp_var->init = true;
 
                                                             };
 
@@ -712,8 +854,8 @@ expr : cte                      {
 
       | T_IDENT T_BRAOUV exprlist T_BRAFER {
                                               $$=malloc(sizeof(var));
-                                              struct varArray* temp_array = getArray($1);
-                                              struct variable* temp_var = temp_array->array;
+                                              varArray* temp_array = getArray($1);
+                                              variable* temp_var = temp_array->array;
 
                                               if (temp_var == NULL || !temp_var->init )
                                               {
@@ -770,7 +912,7 @@ expr : cte                      {
                                                 if(lec_temp == 0)
                                                 {
                                                   push(vars_temp_mips, size(contextes));
-                                                  fprintf(yyout,"\n\tmul $t%d $t%d %d\n", curr_idx(vars_temp_mips), curr_idx(vars_temp_mips)-2,  current_rangelist->totLenght/current_rangelist->length);
+                                                  fprintf(yyout,"\n\tmul $t%d $t%d %d\n", curr_idx(vars_temp_mips), curr_idx(vars_temp_mips)-1,  current_rangelist->totLenght/current_rangelist->length);
                                                   pop(vars_temp_mips);
                                                   fprintf(yyout,"\n");
                                                 }
@@ -787,8 +929,6 @@ expr : cte                      {
                                                 lec_temp++;
                                               }
                                               
-                                              temp_var->init = true;
-
                                               fprintf(yyout,"\n\tli $t%d %d",curr_idx(vars_temp_mips)-lec_temp, p_memoire);
                                               fprintf(yyout,"\n\tadd $t%d $t%d $t%d", curr_idx(vars_temp_mips)-lec_temp, curr_idx(vars_temp_mips)-lec_temp,curr_idx(vars_temp_mips)+1);
                                               fprintf(yyout,"\n\tmul $t%d $t%d   4", curr_idx(vars_temp_mips)-lec_temp, curr_idx(vars_temp_mips)-lec_temp);
@@ -841,6 +981,7 @@ void initData()
 {
   fprintf(yyout, ".data\n");
   fprintf(yyout, "\terrorMessage:\t.asciiz\t\"Error Syntax run time\"\n");
+  fprintf(yyout, "\treadMessage:\t.asciiz\t\"Please write an int and 0 for false and 1 for true:\\n\"\n");
 }
 
 void insert_procedures ()

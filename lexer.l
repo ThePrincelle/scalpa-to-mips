@@ -45,6 +45,7 @@
 program                         { return T_PROGRAM; }
 return                          { return T_RETURN; }
 write                           { return T_WRITE; }
+read                            { return T_READ; }
 begin                           { return T_BEGIN; }
 end                             { return T_END; }
 var                             { return T_VAR; }

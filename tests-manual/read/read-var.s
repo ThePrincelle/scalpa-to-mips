@@ -5,12 +5,22 @@
 #	mainOnly
 main:
 
-	li $t0 1
-	li $t1 1
-	and $t0 $t0 $t1
+
+	addi $sp, $sp, -4
+
+	la $a0 readMessage
+	li $v0 4
+	syscall
+	li $v0 5
+	syscall
+	move $t0 $v0
+	sw $t0 0($sp)
+
+	lw $t0 0($sp)
 	move $a0 $t0
 	li $v0 1
 	syscall
+
 end:
 	li $v0 10
 	syscall

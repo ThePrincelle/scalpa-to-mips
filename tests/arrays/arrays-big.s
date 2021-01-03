@@ -1,5 +1,6 @@
 .data
 	errorMessage:	.asciiz	"Error Syntax run time"
+	readMessage:	.asciiz	"Please write an int and 0 for false and 1 for true:\n"
 	.text
 #	mainOnly
 main:
@@ -64,7 +65,7 @@ main:
 	li $t4 -4
 	blt $t0 $t4 error
 	sub $t4 $t0 $t4
-	mul $t5 $t3 800
+	mul $t5 $t4 800
 
 
 	li $t4 100

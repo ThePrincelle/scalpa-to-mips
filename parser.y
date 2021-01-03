@@ -1172,7 +1172,7 @@ int main(int argc, char* argv[])
 
   // If error in opening the in_file, exit with error
   if (yyin == NULL) {
-      fprintf(stderr, "Unable to open file: %s\nDetails: ", argv[1]);
+      fprintf(stderr, "Unable to open file: %s\nDetails: ", in_file);
       perror("fopen");
       exit(1);
   }

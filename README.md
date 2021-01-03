@@ -108,7 +108,7 @@ Here are the capabilities of the compiler:
 
 Those features are not handled by the compiler:
 
-- functions (calls, declaration).
+- functions (calls, declaration)
 - referenced variables
 
 

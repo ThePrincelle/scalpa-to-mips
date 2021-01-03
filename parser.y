@@ -232,6 +232,12 @@ vardecllist : varsdecl                                              {$$ = true;}
 varsdecl : T_VAR identlist D_POINT atomictype                       {
                                                                       identlist_type* current_ident = $2;
 
+                                                                      // A variable cannot be of type "void"
+                                                                      if($4 == unit_val)
+                                                                      {
+                                                                        yyerror("Syntax error (unit var)");
+                                                                      }
+
                                                                       // As long as the expresion list is not browsed
                                                                       while(current_ident != NULL)
                                                                       {
@@ -252,6 +258,13 @@ varsdecl : T_VAR identlist D_POINT atomictype                       {
                                                                     }
           | T_VAR identlist D_POINT arraytype                     {
                                                                       identlist_type* current_ident = $2;
+
+                                                                      // A variable cannot be of type "void"
+                                                                      if($4->type == unit_val)
+                                                                      {
+                                                                        yyerror("Syntax error (unit var)");
+                                                                      }
+
                                                                       while(current_ident != NULL)
                                                                       {
                                                                         char varscalpa[100];

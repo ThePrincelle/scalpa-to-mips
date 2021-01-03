@@ -325,7 +325,7 @@ while_begin:                                                       {
                                                                       // Handling while loops
                                                                       fprintf(yyout,"\nbwhile%d:", nb_while);
                                                                       nb_while++;
-                                                                      inner_while++;
+                                                                      inner_while=nb_while;
                                                                    }
 
 while_test: expr                                                   {
@@ -363,10 +363,11 @@ prog_instr : T_RETURN                                              {}
            | T_BEGIN T_END                                         {}
            | T_IF deb_if T_THEN if_true /**if_else**/              {inner_if--;}
            | T_WHILE while_begin while_test T_DO prog_instr        {
-                                                                      // Handling while loop
-                                                                      fprintf(yyout,"\n\tj bwhile%d", (nb_while)-inner_while);
-                                                                      fprintf(yyout,"\newhile%d:", (nb_while)-inner_while);
                                                                       inner_while--;
+                                                                      // Handling while loop
+                                                                      fprintf(yyout,"\n\tj bwhile%d", inner_while);
+                                                                      fprintf(yyout,"\newhile%d:", inner_while);
+                                                                      
                                                                    }                                                                            
            | T_WRITE expr                                          {
                                                                     // Write in the MIPS console the result of the expression

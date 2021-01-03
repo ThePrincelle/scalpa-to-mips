@@ -224,10 +224,36 @@
 
 %%
 
-program : T_PROGRAM initMain initVarlist prog_instr                 {
+program : T_PROGRAM initMain initVarlist fundecllist prog_instr                 {
                                                                       //Fin du programme mips
                                                                       fprintf(yyout,"\nend:\n\tli $v0 10\n\tsyscall");
                                                                     };
+
+fundecllist : fundecl ; fundecllist                                 {
+
+                                                                    }
+            |                                                       {}
+
+fundecl     : T_FUNCTION initFunction T_IDENT T_BRAOUV parlist T_BRAFER D_POINT atomictype vardecllist prog_instr {
+
+                                                                                       }
+
+parlist : par                                                                          {
+
+                                                                                       }
+        | par COMMA parlist
+        |
+par : T_IDENT COMMA atomictype                                                        {
+
+                                                                                      }
+    | T_IDENT COMMA arraytype                                                         {
+
+                                                                                      }
+      //| ref ident : typename
+
+initFunction :                                                                        {
+                                                                                        
+                                                                                      }
 
 initMain : T_IDENT                                                  {
                                                                       //Debut du programme mips

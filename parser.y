@@ -964,7 +964,7 @@ cte : T_INTEGER                 {
 %%
 
 void yyerror (char *s) {
-  fprintf(stderr, "[Yacc] error H: %s\n", s);
+  fprintf(stderr, "[Yacc] error: %s\n", s);
   exit(1);
 }
 

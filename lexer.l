@@ -69,8 +69,8 @@ false                           { if(!comment){ yylval.string_val = "0";  } proc
 "-"?[0-9]+                      { if(!comment){ yylval.string_val = strdup(yytext); } process(T_INTEGER); }
 \"[a-zA-Z]+\"                   { if(!comment){ yylval.string_val = strdup(yytext); } process(T_STRING); }
 
-"(*"                            {if(!comment){comment = true; }}
-"*)"                            {if(comment){comment = false; } else perror("Syntax error (no comment to close)");}
+"(*"                            {if(!comment){comment = true; } else { if(new_line) { fprintf(yyout,"\n\t# "); new_line = false;} fprintf(yyout,"%s", strdup(yytext)); }}
+"*)"                            {if(comment){comment = false; } else yyerror("Syntax error (no comment to close)");}
 
 [[:blank:]]                     { if(comment) { fprintf(yyout,"%s", strdup(yytext));} }
 

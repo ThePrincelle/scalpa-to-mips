@@ -181,6 +181,7 @@
   struct stack* vars_temp_mips = NULL;
 
   bool pow_exist = false;
+  int nb_if = 0;
 %}
 
 %union
@@ -198,7 +199,7 @@
 %start program
 
 //Main
-%token T_PROGRAM T_IDENT T_RETURN T_WRITE T_INTEGER T_BOOLEAN T_BEGIN T_END T_STRING T_PAROUV T_PARFER T_VAR T_BRAOUV T_BRAFER SEMICOLON D_POINT COMMA T_UNIT T_ARRAY T_INT T_BOOL T_OF PP ASSIGN T_READ
+%token T_PROGRAM T_IDENT T_RETURN T_WRITE T_INTEGER T_BOOLEAN T_BEGIN T_END T_STRING T_PAROUV T_PARFER T_VAR T_BRAOUV T_BRAFER SEMICOLON D_POINT COMMA T_UNIT T_ARRAY T_INT T_BOOL T_OF PP ASSIGN T_READ T_THEN T_IF T_ELSE
 
 // Operators
 %token T_MINUS T_PLUS T_MULT T_POW
@@ -206,11 +207,12 @@
 // Comparators
 %token T_NOT T_LE T_GE T_NE T_LT T_GT T_EQ T_AND T_OR T_XOR
 
+%right T_THEN T_ELSE
 %nonassoc T_LE T_GE T_NE T_LT T_GT T_EQ
 %left T_PLUS T_MINUS T_OR T_XOR
 %left T_DIV T_MULT T_AND
 %right T_POW
-%right OPUMINUS T_NOT
+%right OPUMINUS T_NOT 
 
 
 %type <string_val> T_IDENT T_INTEGER T_BOOLEAN T_STRING
@@ -325,10 +327,31 @@ rangelist : T_INTEGER PP T_INTEGER                                  {
                                                                       $$ = concatRangelist(temp_rangelist,$5);
                                                                    }
 
+deb_if   :    expr                                                 {
+                                                                      //Si expr egale à 1 go to bwhile%d nbwhile
+                                                                      fprintf(yyout,"\n\tbeq $t%d 0 endIf%d", curr_idx(vars_temp_mips),nb_if);
+                                                                      nb_if++;
+                                                                   };
+
+/*deb_ifelse    :  expr                                              {
+                                                                      //Si expr egale à 1 go to bwhile%d nbwhile
+                                                                      fprintf(yyout,"\n\tbeq $t%d 0 else%d", curr_idx(vars_temp_mips),nb_if);
+                                                                      nb_if++;
+                                                                   };*/
+
+if_true       :   prog_instr                                       {
+                                                                      fprintf(yyout,"\n\tj endIf%d", nb_if-1);
+                                                                      fprintf(yyout,"\nendIf%d:", nb_if-1);
+                                                                   }
+                                                                   
+/*if_else       :   T_ELSE if_else prog_instr                      {fprintf(yyout,"\nelse%d:", nb_if);}
+              |                                                    {};*/
+
 prog_instr : T_RETURN                                              {}
            | T_RETURN expr                                         {}
            | T_BEGIN  sequence T_END                               {}
            | T_BEGIN T_END                                         {}
+           | T_IF deb_if T_THEN if_true /**if_else**/              { nb_if--;}
            | T_WRITE expr                                          {
                                                                     
                                                                     if ($2->type == int_val || $2->type == bool_val)

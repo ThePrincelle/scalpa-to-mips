@@ -61,6 +61,9 @@ int                             { process(T_INT); }
 unit                            { process(T_UNIT); }
 bool                            { process(T_BOOL); }
 of                              { process(T_OF); }
+if                              { process(T_IF); }
+then                            { process(T_THEN); }
+else                            { process(T_ELSE); }
 
 true                            { if(!comment){ yylval.string_val = "1"; } process(T_BOOLEAN);  }
 false                           { if(!comment){ yylval.string_val = "0";  } process(T_BOOLEAN); }

@@ -157,9 +157,11 @@
 
   // Variable for the number of while loops
   int nb_while = 0;
+  int inner_while = 0;
 
   // Variable for the number of if
   int nb_if = 0;
+  int inner_if = 0;
 %}
 
 %union
@@ -323,6 +325,7 @@ while_begin:                                                       {
                                                                       // Handling while loops
                                                                       fprintf(yyout,"\nbwhile%d:", nb_while);
                                                                       nb_while++;
+                                                                      inner_while++;
                                                                    }
 
 while_test: expr                                                   {
@@ -333,8 +336,10 @@ while_test: expr                                                   {
 
 deb_if   :    expr                                                 {
                                                                       // If expression is true, go to endif
-                                                                      fprintf(yyout,"\n\tbeq $t%d 0 endIf%d", curr_idx(vars_temp_mips),nb_if);
+                                                                      fprintf(yyout,"\n\tbeq $t%d 0 endIf%d", curr_idx(vars_temp_mips),nb_if-inner_if);
+                                                                      pop(vars_temp_mips);
                                                                       nb_if++;
+                                                                      inner_if++;
                                                                    };
 
 /*deb_ifelse    :  expr                                              {
@@ -345,8 +350,8 @@ deb_if   :    expr                                                 {
 
 if_true       :   prog_instr                                       {
                                                                       // Handling if expr == true
-                                                                      fprintf(yyout,"\n\tj endIf%d", nb_if-1);
-                                                                      fprintf(yyout,"\nendIf%d:", nb_if-1);
+                                                                      fprintf(yyout,"\n\tj endIf%d", (nb_if-inner_if));
+                                                                      fprintf(yyout,"\nendIf%d:", (nb_if-inner_if));
                                                                    }
 /* Handling else */                                                                   
 /*if_else       :   T_ELSE if_else prog_instr                      {fprintf(yyout,"\nelse%d:", nb_if);}
@@ -356,12 +361,12 @@ prog_instr : T_RETURN                                              {}
            | T_RETURN expr                                         {}
            | T_BEGIN  sequence T_END                               {}
            | T_BEGIN T_END                                         {}
-           | T_IF deb_if T_THEN if_true /**if_else**/              { nb_if--;}
+           | T_IF deb_if T_THEN if_true /**if_else**/              {inner_if--;}
            | T_WHILE while_begin while_test T_DO prog_instr        {
                                                                       // Handling while loop
-                                                                      nb_while--;
-                                                                      fprintf(yyout,"\n\tj bwhile%d", nb_while);
-                                                                      fprintf(yyout,"\newhile%d:", nb_while);
+                                                                      fprintf(yyout,"\n\tj bwhile%d", (nb_while)-inner_while);
+                                                                      fprintf(yyout,"\newhile%d:", (nb_while)-inner_while);
+                                                                      inner_while--;
                                                                    }                                                                            
            | T_WRITE expr                                          {
                                                                     // Write in the MIPS console the result of the expression

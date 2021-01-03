@@ -5,16 +5,10 @@
 	.text
 #	mainOnly
 main:
-	li $t0 1
-	li $t1 1
-	seq $t0 $t0 $t1
-	beq $t0 0 endIf0
-	li $t0 1
+	li $t0 12
 	move $a0 $t0
 	li $v0 1
 	syscall
-	j endIf0
-endIf0:
 end:
 	li $v0 10
 	syscall

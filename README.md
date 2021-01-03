@@ -118,6 +118,8 @@ Those features are not handled by the compiler:
 
 - We do not support "else" for condionnal expressions.
 
+- We do not support while loops inside while loops.
+
 - Check that the values of the array are initalized before reading them.
 
     >For example, this code:

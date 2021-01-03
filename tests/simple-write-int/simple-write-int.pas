@@ -1,2 +1,2 @@
 program mainOnly
-  return 10
+  write 12

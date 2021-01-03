@@ -239,7 +239,7 @@ varsdecl : T_VAR identlist D_POINT atomictype                       {
                                                                         char varscalpa[100];
                                                                         snprintf(varscalpa,100,"%s",current_ident->ident);
 
-                                                                        variable* inserted = insertVar(varscalpa, curr_idx(contextes), $4,0);
+                                                                        variable* inserted = insertVar(varscalpa, size(contextes), $4,0);
 
                                                                         if(inserted == NULL)
                                                                         {
@@ -257,7 +257,7 @@ varsdecl : T_VAR identlist D_POINT atomictype                       {
                                                                         char varscalpa[100];
                                                                         snprintf(varscalpa,100,"%s",current_ident->ident);
 
-                                                                        varArray* inserted = insertArray(varscalpa, curr_idx(contextes), $4,stderr);
+                                                                        varArray* inserted = insertArray(varscalpa, size(contextes), $4,stderr);
 
                                                                         if(inserted == NULL)
                                                                         {
@@ -305,7 +305,7 @@ rangelist : T_INTEGER PP T_INTEGER                                  {
 
 prog_instr : T_RETURN               {}
            | T_RETURN expr          {}
-           | T_BEGIN {push(contextes, 0);} sequence T_END {$$ = $1; pop(contextes);}
+           | T_BEGIN  sequence T_END {$$ = $1;}
            | T_BEGIN T_END          { /**delete all var inner current context**/}//@TODO
            | T_WRITE expr           {
                                      if ($2->type == int_val || $2->type == bool_val)
@@ -326,7 +326,7 @@ prog_instr : T_RETURN               {}
                                         yyerror("Syntax error (null ou init)");
                                       }
 
-                                      if ((int)var->context > curr_idx(contextes))
+                                      if ((int)var->context > size(contextes))
                                       {
                                         yyerror("Syntax error (context)");
                                       }
@@ -351,7 +351,7 @@ prog_instr : T_RETURN               {}
                                                                 yyerror("Syntax error (null ou init)");
                                                               }
 
-                                                              if ((int)temp_var->context > curr_idx(contextes))
+                                                              if ((int)temp_var->context > size(contextes))
                                                               {
                                                                 yyerror("Syntax error (context)");
                                                               }
@@ -379,7 +379,7 @@ prog_instr : T_RETURN               {}
                                                               }
                                                               
                                                               int p_memoire = temp_var->p_memoire;
-                                                              push(vars_temp_mips, curr_idx(contextes));
+                                                              push(vars_temp_mips, size(contextes));
                                                               fprintf(yyout,"\n\tmove $t%d $t0",curr_idx(vars_temp_mips));
                                                               fprintf(yyout,"\n\tmove $t0 $t%d",curr_idx(vars_temp_mips)-1);
                                                               fprintf(yyout,"\n\tmove $t%d $t%d",curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips));
@@ -392,7 +392,7 @@ prog_instr : T_RETURN               {}
                                                                 if(lec_temp == 0)
                                                                 {
                                                                   lec_pos = curr_idx(vars_temp_mips);
-                                                                  push(vars_temp_mips, curr_idx(contextes));
+                                                                  push(vars_temp_mips, size(contextes));
                                                                 }
                                                                 var* temp_expr = current_exprlist->expr;
                                                                 if(temp_expr->type != int_val)
@@ -413,7 +413,7 @@ prog_instr : T_RETURN               {}
                                                                 if(lec_temp == 0)
                                                                 {
                                                                   fprintf(yyout,"\n\tsub $t%d $t%d $t%d",curr_idx(vars_temp_mips)-1, lec_pos, curr_idx(vars_temp_mips));
-                                                                  push(vars_temp_mips, curr_idx(contextes));
+                                                                  push(vars_temp_mips, size(contextes));
                                                                   fprintf(yyout,"\n\tmul $t%d $t%d %d\n", curr_idx(vars_temp_mips), curr_idx(vars_temp_mips)-2, current_rangelist->totLenght/current_rangelist->length);
                                                                   pop(vars_temp_mips);
                                                                   fprintf(yyout,"\n");
@@ -422,7 +422,7 @@ prog_instr : T_RETURN               {}
                                                                 {
                                                                   fprintf(yyout,"\n\tsub $t%d $t%d $t%d",curr_idx(vars_temp_mips), lec_pos, curr_idx(vars_temp_mips));
                                                                   fprintf(yyout,"\n\tmul $t%d $t%d %d", curr_idx(vars_temp_mips), curr_idx(vars_temp_mips), current_rangelist->totLenght/current_rangelist->length);
-                                                                  push(vars_temp_mips, curr_idx(contextes));
+                                                                  push(vars_temp_mips, size(contextes));
                                                                   fprintf(yyout,"\n\tadd $t%d $t%d $t%d\n",curr_idx(vars_temp_mips), curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips));
                                                                   pop(vars_temp_mips);
                                                                 }
@@ -467,12 +467,12 @@ expr : cte                      {
                                   $$=$1;
                                   if ($1->type == int_val || $1->type == bool_val)
                                   {
-                                    push(vars_temp_mips, curr_idx(contextes));
+                                    push(vars_temp_mips, size(contextes));
                                     fprintf(yyout,"\n\tli $t%d %d",curr_idx(vars_temp_mips), atoi($1->val));
                                   }
                                   else
                                   {
-                                    push(vars_temp_mips, curr_idx(contextes));
+                                    push(vars_temp_mips, size(contextes));
                                     fprintf(yyout,"\n\tli $t%d %s",curr_idx(vars_temp_mips) ,$1->val);
                                   }
                                   $$->type = $1->type;
@@ -701,11 +701,11 @@ expr : cte                      {
                                     yyerror("Syntax error (NULL ou init)");
                                   }
 
-                                  if ((int)var->context > curr_idx(contextes))
+                                  if ((int)var->context > size(contextes))
                                   {
                                     yyerror("Syntax error (context)");
                                   }
-                                  push(vars_temp_mips, curr_idx(contextes));
+                                  push(vars_temp_mips, size(contextes));
                                   fprintf(yyout,"\n\tlw $t%d %d($sp)", curr_idx(vars_temp_mips),var->p_memoire);
                                   $$->type = var->type;
                                 }
@@ -720,7 +720,7 @@ expr : cte                      {
                                                 yyerror("Syntax error (NULL ou init)");
                                               }
 
-                                              if ((int)temp_var->context > curr_idx(contextes))
+                                              if ((int)temp_var->context > size(contextes))
                                               {
                                                 yyerror("Syntax error (context)");
                                               }
@@ -748,7 +748,7 @@ expr : cte                      {
                                               {
                                                 if(lec_temp == 0)
                                                 {
-                                                  push(vars_temp_mips, curr_idx(contextes));
+                                                  push(vars_temp_mips, size(contextes));
                                                 }
                                                 var* temp_expr = current_exprlist->expr;
                                                 if(temp_expr->type != int_val)
@@ -769,7 +769,7 @@ expr : cte                      {
                                                 fprintf(yyout,"\n\tsub $t%d $t%d $t%d",curr_idx(vars_temp_mips), lec_temp, curr_idx(vars_temp_mips));
                                                 if(lec_temp == 0)
                                                 {
-                                                  push(vars_temp_mips, curr_idx(contextes));
+                                                  push(vars_temp_mips, size(contextes));
                                                   fprintf(yyout,"\n\tmul $t%d $t%d %d\n", curr_idx(vars_temp_mips), curr_idx(vars_temp_mips)-2,  current_rangelist->totLenght/current_rangelist->length);
                                                   pop(vars_temp_mips);
                                                   fprintf(yyout,"\n");
@@ -777,7 +777,7 @@ expr : cte                      {
                                                 else
                                                 {
                                                   fprintf(yyout,"\n\tmul $t%d $t%d %d", curr_idx(vars_temp_mips), curr_idx(vars_temp_mips),  current_rangelist->totLenght/current_rangelist->length);
-                                                   push(vars_temp_mips, curr_idx(contextes));
+                                                   push(vars_temp_mips, size(contextes));
                                                   fprintf(yyout,"\n\tadd $t%d $t%d $t%d\n",curr_idx(vars_temp_mips), curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips));
                                                   pop(vars_temp_mips);
                                                 }

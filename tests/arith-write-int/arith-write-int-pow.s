@@ -1,10 +1,10 @@
 .data
 	errorMessage:	.asciiz	"Error Syntax run time"
 	readMessage:	.asciiz	"Please write an int and 0 for false and 1 for true:\n"
+
 	.text
 #	mainOnly
 main:
-
 	li $t0 2
 	li $t1 4
 	move $a2 $t0

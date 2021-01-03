@@ -226,7 +226,7 @@
 
 %%
 
-program : T_PROGRAM T_IDENT  {fprintf(yyout,"\t.text\n#\t%s\nmain:",$2);} vardecllist{if(vars_count>0)fprintf(yyout,"\n\taddi $sp, $sp, %d",-4*(vars_count+arrays_vars));} prog_instr {fprintf(yyout,"\nend:\n\tli $v0 10\n\tsyscall");};
+program : T_PROGRAM T_IDENT  {fprintf(yyout,"\n\t.text\n#\t%s\nmain:",$2);} vardecllist{if(vars_count>0)fprintf(yyout,"\n\taddi $sp, $sp, %d",-4*(vars_count+arrays_vars));} prog_instr {fprintf(yyout,"\nend:\n\tli $v0 10\n\tsyscall");};
 
 vardecllist : varsdecl                                              {$$ = true;}
             | varsdecl SEMICOLON vardecllist                        {$$ = true;}

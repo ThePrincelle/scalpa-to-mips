@@ -1,15 +1,11 @@
 .data
 	errorMessage:	.asciiz	"Error Syntax run time"
 	readMessage:	.asciiz	"Please write an int and 0 for false and 1 for true:\n"
+
 	.text
 #	mainOnly
 main:
-
-
-
-
 	addi $sp, $sp, -812
-
 	li $t0 -3
 	li $t1 1
 	li $t2 10
@@ -37,7 +33,6 @@ main:
 	mul $t1 $t1   4
 	add $t1, $sp, $t1
 	sw $t0 0($t1)
-
 	li $t0 -3
 	li $t1 1
 	li $t2 -3
@@ -64,11 +59,9 @@ main:
 	move $a0 $t0
 	li $v0 1
 	syscall
-
 end:
 	li $v0 10
 	syscall
-
 
 error:
 	la $a0 errorMessage

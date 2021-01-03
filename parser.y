@@ -22,16 +22,7 @@
   // Arithmetic operators
   enum op_arith {opb_plus, opb_minus, opb_mult, opb_div, opb_pow, opb_le, opb_lt, opb_ge, opb_gt, opb_eq, opb_ne, opb_and, opb_or, opb_xor};
 
-  // Number of line in the MIPS code and the code of the line
-  typedef struct quadrup {
-    char* instruction;
-    int   cible;
-  } quadrup;
-  quadrup QUAD[100];
-  int nextquad = 0;
-
-  // Variable structure that stores the value and the type
- typedef struct var{
+  typedef struct var{
     char* val;
     int type;
   } var;
@@ -147,51 +138,8 @@
     return res;
   }
 
-  // Reading list of the code
-  typedef struct lpos {
-  int position;
-  struct lpos* suivant;
-  } lpos;
 
-  // Inserts a new instruction into a reading list of the code
-  lpos* crelist(int position) {
-    lpos* new = malloc(sizeof(lpos));
-    new->position = position;
-    new->suivant = NULL;
-    return new;
-  }
-
-  // Merges two reading lists together and returns the merged list
-  lpos* concat(lpos* l1, lpos* l2) {
-    lpos* res;
-    if (l1 != NULL) res = l1;
-    else if (l2 != NULL) res = l2;
-         else res = NULL;
-    if (l1 != NULL) {
-      while (l1->suivant!=NULL) {
-        l1 = l1->suivant;
-      }
-      l1->suivant = l2;
-    }
-    return res;
-  }
-
-  // Adds the execution of a QUAD with a lpos (list)
-  void complete(lpos* liste, int cible) {
-    QUAD[liste->position].cible = cible;
-    while (liste->suivant != NULL) {
-      liste = liste->suivant;
-      QUAD[liste->position].cible = cible;
-    }
-  }
-
-  // Generates a new quad
-  void gencode(char* code) {
-    QUAD[nextquad].instruction=code;
-    QUAD[nextquad].cible=0;
-    nextquad++;
-  }
-
+  // Exits the progam and returns an error
   // Exits the progam and returns an error
   void yyerror(char*);
   //void lex_free();
@@ -207,6 +155,9 @@
 
   // Simple boolean that track if a "pow" method is needed
   bool pow_exist = false;
+
+  // Variable for the number of while loops
+  int nb_while = 0;
 %}
 
 %union
@@ -224,7 +175,7 @@
 %start program
 
 //Main
-%token T_PROGRAM T_IDENT T_RETURN T_WRITE T_INTEGER T_BOOLEAN T_BEGIN T_END T_STRING T_PAROUV T_PARFER T_VAR T_BRAOUV T_BRAFER SEMICOLON D_POINT COMMA T_UNIT T_ARRAY T_INT T_BOOL T_OF PP ASSIGN T_READ
+%token T_PROGRAM T_IDENT T_RETURN T_WRITE T_INTEGER T_BOOLEAN T_BEGIN T_END T_STRING T_PAROUV T_PARFER T_VAR T_BRAOUV T_BRAFER SEMICOLON D_POINT COMMA T_UNIT T_ARRAY T_INT T_BOOL T_OF PP ASSIGN T_READ T_WHILE T_DO
 
 // Operators
 %token T_MINUS T_PLUS T_MULT T_POW
@@ -352,13 +303,30 @@ rangelist : T_INTEGER PP T_INTEGER                                  {
                                                                       // We take the list of ranges and add it the new one.
                                                                       $$ = concatRangelist(temp_rangelist,$5);
                                                                    }
+while_begin:                                                       {
+                                                                      // Handling while loops
+                                                                      fprintf(yyout,"\nbwhile%d:", nb_while);
+                                                                      nb_while++;
+                                                                   }
+
+while_test: expr                                                   {
+                                                                      // If expression is true, then go to bwhile%d nbwhile
+                                                                      fprintf(yyout,"\n\tbeq $t%d 0 ewhile%d", curr_idx(vars_temp_mips),nb_while-1);
+                                                                      pop(vars_temp_mips);
+                                                                   }
 
 prog_instr : T_RETURN                                              {}
            | T_RETURN expr                                         {}
            | T_BEGIN  sequence T_END                               {}
            | T_BEGIN T_END                                         {}
+           | T_WHILE while_begin while_test T_DO prog_instr        {
+                                                                      // Handling while loop
+                                                                      nb_while--;
+                                                                      fprintf(yyout,"\n\tj bwhile%d", nb_while);
+                                                                      fprintf(yyout,"\newhile%d:", nb_while);
+                                                                   }                                                                            
            | T_WRITE expr                                          {
-
+                                                                    // Write in the MIPS console the result of the expression
                                                                     if ($2->type == int_val || $2->type == bool_val)
                                                                     {
                                                                       /**

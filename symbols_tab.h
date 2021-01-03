@@ -6,7 +6,7 @@
 #include <string.h>
 
 // Utility function to initialize symbols_array
-void init_symbols_array();
+void initSymbolsTab();
 
 /*
     Function that either adds the symbol to the table of if it already exists do nothing.

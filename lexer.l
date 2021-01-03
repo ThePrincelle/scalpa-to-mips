@@ -54,6 +54,8 @@ read                            { process(T_READ); }
 begin                           { process(T_BEGIN); }
 end                             { process(T_END); }
 var                             { process(T_VAR); }
+while                           { process(T_WHILE); }
+do                              { process(T_DO); }
 
 array                           { process(T_ARRAY); }
 integer                         { process(T_INTEGER); }

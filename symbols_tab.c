@@ -13,7 +13,7 @@ typedef struct symbol {
 symbol** symbols_array;
 
 // Utility function to initialize symbols_array
-void init_symbols_array()
+void initSymbolsTab()
 {
   symbols_array = malloc(symbols_capacity*sizeof(symbol*));
 }

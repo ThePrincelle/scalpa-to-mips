@@ -1,4 +1,4 @@
-#include "varArray.h"
+#include "array_tab.h"
 
 int arrays_count;
 int arrays_capacity = 10;

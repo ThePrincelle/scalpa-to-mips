@@ -21,8 +21,8 @@ __Table of contents__
 - [Compile and run](#compile-and-run)
 - [Tests](#tests)
 - [Capabilities](#capabilities)
-- [Key features](#key-features)
 - [Missing features](#missing-features)
+- [Limitations](#limitations)
 - [Difficulties](#difficulties)
 
 ## Technologies used
@@ -66,7 +66,7 @@ __Arguments (optional by default):__
 - `-tov` : displays the table of variables before exiting.
 - `-toa` : displays the table of arrays before exiting.
 - `-o <out_file>` : specify the output file for MIPS code, if not specified, defaults to <in_file>.s in the same directory as input file
-- `<in_file>` (required): : path to the file containing the SCALPA code to be compiled into MIPS.
+- `<in_file>` (required) : path to the file containing the SCALPA code to be compiled into MIPS.
 
 To run the generated MIPS code we provide an emulator.
 
@@ -90,26 +90,58 @@ This script will go through every SCALPA code files and first run the file in th
 
 If either one of the two tests fail, the process will stop and mark an error.
 
+There is also manual tests provided, for example when MIPS prompts for a value for the "read" function. Those are available in the folder: "tests-manual". 
+
 
 ## Capabilities
 
 Here are the capabilities of the compiler:
 
+- Handle the traduction of almost all the grammar of SCALPA.
+- Includes automated and manuals tests.
+- CI system that runs the tests and returns for each commit the result of those.
+- Setup a specific output file.
 - Display the table of symbols, variables and arrays.
-
-
-## Key features
-
-- 
 
 
 ## Missing features
 
-- 
+Those features are not handled by the compiler:
+
+- While loops,
+- Conditionnal expressions and (if ... then ... else),
+- functions (calls, declaration).
+
+
+## Limitations
+
+- We can only use arrays of maximum 7 dimensions because we only have access to 9 temporary variables at a time. 
+
+- Check that the values of the array are initalized before reading them.
+
+    >For example, this code:
+    >```pascal
+    >program mainOnly
+    >    var val : array[1..3] of int;
+    >    begin
+    >        write val[1];
+    >    end
+    >```
+    >should return a syntax error because it's missing: ```val[1] := ?```.
 
 
 ## Difficulties
 
-Ici, nous allons vous faire part de toutes les difficultés que nous avons rencontré tout le long du projet.
+Here we are going to share with you the difficulties that we encountered throughout the project.
 
-- 
+__Compiler:__ 
+
+- Handling of arrays:
+  - Calculation of space required,
+  - Calculation of the position i[1,1] with MIPS
+  - Verify with MIPS if a given index is valid within a given ensemble (i.e. 1 is not in [-4..10]).
+
+__Project organisation:__
+
+- Learning MIPS took a lot of time.
+- Working on the project with a small number of people who do not came from the UFR faculty did not facilitate the distribution of tasks.

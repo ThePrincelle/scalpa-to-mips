@@ -39,7 +39,7 @@ do
     echo ""
 
     # Run compiler on file
-    echo "  🔄  Running Scalpa to MIPS compiler on: ${testfile_mips}"
+    echo "  🔄  Running Scalpa to MIPS compiler on: ${testfile}"
     echo ""
     echo -e "\033[32m"
     if ./scalpa -tos -toa -tov "${testfile}" ; then

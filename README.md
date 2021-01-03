@@ -108,14 +108,15 @@ Here are the capabilities of the compiler:
 
 Those features are not handled by the compiler:
 
-- While loops,
-- Conditionnal expressions and (if ... then ... else),
 - functions (calls, declaration).
+- referenced variables
 
 
 ## Limitations
 
 - We can only use arrays of maximum 7 dimensions because we only have access to 9 temporary variables at a time. 
+
+- We do not support "else" for condionnal expressions.
 
 - Check that the values of the array are initalized before reading them.
 

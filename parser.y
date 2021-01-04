@@ -880,7 +880,7 @@ expr : cte                      {
                                   {
                                     fprintf(yyout,"\n\tseq $t%d $t%d $t%d", curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips));
                                     pop(vars_temp_mips);
-                                    $$->type = $1->type;
+                                    $$->type = bool_val;
                                   }
                                   else
                                   {
@@ -894,7 +894,7 @@ expr : cte                      {
                                   {
                                     fprintf(yyout,"\n\tsne $t%d $t%d $t%d", curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips)-1, curr_idx(vars_temp_mips));
                                     pop(vars_temp_mips);
-                                    $$->type = $1->type;
+                                    $$->type = bool_val;
                                   }
                                   else
                                   {

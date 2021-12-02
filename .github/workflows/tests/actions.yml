@@ -1,0 +1,8 @@
+name: 'Testing Compiler'
+description: 'Set of tests for the Scalpa to MIPS compiler'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  env:
+    TEST_FOLDER: "tests"
+  entrypoint: 'cd /app && ./test.sh'

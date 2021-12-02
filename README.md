@@ -5,7 +5,7 @@ This is a Scalpa compiler that can translate code to MIPS assembly language.
 It is a project part of the "Compilation" module made during our Master of computer science.\
 [Link to the subject](Sujet_Compilation.pdf)
 
-[![Tests Status](https://img.shields.io/drone/build/lpolitanski/scalpa-to-mips?label=tests&server=https%3A%2F%2Fdrone.princelle.org)](https://drone.princelle.org/lpolitanski/scalpa-to-mips)
+[![Test](https://github.com/ThePrincelle/scalpa-to-mips/actions/workflows/test.yml/badge.svg)](https://github.com/ThePrincelle/scalpa-to-mips/actions/workflows/test.yml)
 
 [Link to the project](https://share.princelle.org/scalpa-to-mips)
 
